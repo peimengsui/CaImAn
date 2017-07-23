@@ -167,7 +167,7 @@ def nf_match_neurons_in_binary_masks(masks_gt,masks_comp,thresh_cost=.7, min_dis
     idx_tp_cnmf = matches[1][idx_tp]   # algorithm - comp 
 
     idx_fn = np.setdiff1d(list(range(np.shape(masks_gt)[0])),matches[0][idx_tp])
-
+    #TODO Change because there is a missanderstanding of tpgt and tp comp
     idx_fp =  np.setdiff1d(list(range(np.shape(masks_comp)[0])),matches[1][idx_tp])
 
     idx_fp_cnmf = idx_fp
@@ -202,7 +202,7 @@ def nf_match_neurons_in_binary_masks(masks_gt,masks_comp,thresh_cost=.7, min_dis
             pl.axis('off')
         except :
             print("not able to plot precision recall usually because we are on travis")
-    return  idx_tp_gt,idx_tp_comp, idx_fn_gt, idx_fp_comp, performance 
+    return  idx_tp_gt,idx_tp_comp, idx_fn_gt, idx_fp_comp, performance
 
 
 

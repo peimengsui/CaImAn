@@ -205,7 +205,7 @@ def nb_view_patches(Yr, A, C, b, f, d1, d2, image_neurons=None, thr=0.99, denois
             source.trigger('change')
         """)
 
-    plot = bpl.figure(plot_width=600, plot_height=300)
+    plot = bpl.figure(plot_width=900, plot_height=450)
     plot.line('x', 'y', source=source, line_width=1, line_alpha=0.6)
     if denoised_color is not None:
         plot.line('x', 'y2', source=source, line_width=1, line_alpha=0.6, color=denoised_color)
@@ -214,7 +214,7 @@ def nb_view_patches(Yr, A, C, b, f, d1, d2, image_neurons=None, thr=0.99, denois
                                  title="Neuron Number", callback=callback)
     xr = Range1d(start=0, end=image_neurons.shape[1])
     yr = Range1d(start=image_neurons.shape[0], end=0)
-    plot1 = bpl.figure(x_range=xr, y_range=yr, plot_width=300, plot_height=300)
+    plot1 = bpl.figure(x_range=xr, y_range=yr, plot_width=450, plot_height=450)
 
     plot1.image(image=[image_neurons[::-1, :]], x=0,
                 y=image_neurons.shape[0], dw=d2, dh=d1, palette=grayp)
