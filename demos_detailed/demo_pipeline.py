@@ -91,8 +91,7 @@ params_movie = {'fname': ['Sue_2x_3000_40_-46.tif'],
                'final_frate': 30,
                'r_values_min_patch': .7,  # threshold on space consistency
                'fitness_min_patch': -40,  # threshold on time variability
-                # threshold on time variability (if nonsparse activity)
-               'fitness_delta_min_patch': -40,
+               'fitness_delta_min_patch': -40, # threshold on time variability of the diff of the activity
                'Npeaks': 10,
                'r_values_min_full': .85,
                'fitness_min_full': - 50,
@@ -534,9 +533,8 @@ A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
 # %% again recheck quality of components, stricter criteria
 final_frate = params_movie['final_frate']
 r_values_min = params_movie['r_values_min_full']  # threshold on space consistency
-fitness_min = params_movie['fitness_delta_min_full']  # threshold on time variability
-# threshold on time variability (if nonsparse activity)
-fitness_delta_min = params_movie['fitness_delta_min_full']
+fitness_min = params_movie['fitness_min_full']  # threshold on time variability
+fitness_delta_min = params_movie['fitness_delta_min_full'] # threshold on time variability of the diff of the activity
 Npeaks = params_movie['Npeaks']
 traces = C + YrA
 idx_components, idx_components_bad, fitness_raw, fitness_delta, r_values = estimate_components_quality(

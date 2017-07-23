@@ -56,31 +56,34 @@ from caiman.tests.comparison import comparison
 #GLOBAL VAR
 params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
                 'niter_rig': 1,
-               'max_shifts': (3, 3),  # maximum allow rigid shift
-               'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
+                'max_shifts': (20, 20),  # maximum allow rigid shift
+                'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
                # if none all the splits are processed and the movie is saved
                'num_splits_to_process_rig': None,
-               # intervals at which patches are laid out for motion correction
-               'p': 1,  # order of the autoregressive system
-               'merge_thresh': 0.8,  # merging threshold, max correlation allowed
-               'rf': 15,  # half-size of the patches in pixels. rf=25, patches are 50x50
-               'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
-               'K': 4,  # number of components per patch
-               # if dendritic. In this case you need to set init_method to
-               # sparse_nmf
-               'is_dendrites': False,
-               'init_method': 'greedy_roi',
-               'gSig': [4, 4],  # expected half size of neurons
-               'alpha_snmf': None,  # this controls sparsity
-               'final_frate': 30,
-                'r_values_min_patch' : .7,  # threshold on space consistency
+
+                # intervals at which patches are laid out for motion correction
+                'merge_thresh': 0.8,  # merging threshold, max correlation allowed
+                'rf': 15,  # half-size of
+                 # the patches in pixels. rf=25, patches are 50x50
+                'stride_cnmf': 6,  # amount of overlap between the patches in pixels
+                'K': 4,  # number of components per patch
+                'p': 1,  # order of the autoregressive system
+
+                 # if dendritic. In this case you need to set init_method to sparse_nmf
+                'is_dendrites': False,
+                'init_method': 'greedy_roi',
+                'gSig': [4,4],  # expected half size of neurons
+                'alpha_snmf': None,  # this controls sparsity
+
+                'final_frate': 30,
+                'r_values_min_patch' : .8,  # threshold on space consistency
                 'fitness_min_patch' : -40,  # threshold on time variability
-# threshold on time variability (if nonsparse activity)
-                'fitness_delta_min_patch' : -40,
-                'Npeaks': 10,
+                'fitness_delta_min_patch' : -40, # threshold on time variability of the diff of the activity
                 'r_values_min_full' : .85,
                 'fitness_min_full' : - 50,
                 'fitness_delta_min_full' : - 50,
+
+                'Npeaks': 10,
                 'only_init_patch':True,
                 'gnb':1,
                 'memory_fact':1,
@@ -186,7 +189,7 @@ def test_general():
     if not params_movie.has_key('max_shifts'):
         fnames = params_movie['fname']
         border_to_0 = 0
-    else:#elif not params_movie.has_key('overlaps'):
+    else:
         fnames = [mc.fname_tot_rig]
         border_to_0 = bord_px_rig
         m_els = m_rig
@@ -208,9 +211,10 @@ def test_general():
     else:
         print('One file only, not saving!')
         fname_new = name_new[0]
-    
-    
+
     Yr, dims, T = cm.load_memmap(fname_new)
+    print("##################################")
+    print(dims)
     images = np.reshape(Yr.T, [T] + list(dims), order='F')
     Y = np.reshape(Yr, dims + (T,), order='F')
     
@@ -318,7 +322,7 @@ def test_general():
     if (comp.information['diff']['cnmfull']['isdifferent']):
         print("the cnmf full frame produces different  results than the groundtruth ")
         pb = True
-    assert (not pb)
+    assert not pb,"if you want to know more about the differences and wether they are good or bad, try investigative_comparison.ipynb"
 
 
 
