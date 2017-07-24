@@ -26,7 +26,7 @@ import psutil
 
 #%%
 def Params(name = 'demoMovieJ', nbneuron=30, neuronsize=None,remove_very_bad_comps = True,
-                automode=True, power=False):
+           automode=True, power=False,speed=1):
     """Dictionary for setting the CNMF parameters.
 
     Any parameter that is not set get a default value specified
@@ -232,25 +232,51 @@ def Params(name = 'demoMovieJ', nbneuron=30, neuronsize=None,remove_very_bad_com
 
     reference_mem = 10e9
     mem_per_pix = 3.6977678498329843e-09
+    remain_mem = 4 
+    power = {'min': 10
+    'medium': 20,
+    'max':30,
+    }
+    movement = {
+    'really high' : 8
+    'high' :6,
+    'medium' : 4,
+    'small' : 2,
+    'none': 1
+    }
+    nbneur = {
+    'really high' : 70
+    'high' :45,
+    'medium' : 30,
+    'small' : 20,
+    'sparse' : 10,
+    }
 #################### COMPUTING ################
 
     if automode :
+    	#computing the params of the machine
         used = np.array(psutil.virtual_memory()[2])
         memory = np.array(psutil.virtual_memory()[0])  ## we can refer to this one more
         avail_memory = np.array(psutil.virtual_memory()[1]) ##it should change drastically depending on the process
-
         cpu = np.array(psutil.cpu_freq()[2])
         mem = int(memory / 1e9)
         cpu = int(cpu / 1e3)
         pwr = n_processes * cpu
+
         if (used > 80 )or(avail_memory/memory)<0.3:
             print("you may need to close some apps and to kill some processes to make CaImaN run faster")
-
-        filesize
-        n_chunks = int((filesize*n_processes)/(mem-4)+1)
+        
         if power:
             if pwr-10 >power:
-                print("your computer does not seem to have that kind ")
+                print("your computer does not seem to have that kind of power..")
+        if pwr > power['min']*speed:
+        	p=1
+        elif pwr> power['medium']*speed:
+        	p=2
+        elif pwr > power['max']*speed:
+        	p=2
+        else:
+        	p=0
 
 
         #TODO check is this a good way ?
@@ -259,19 +285,15 @@ def Params(name = 'demoMovieJ', nbneuron=30, neuronsize=None,remove_very_bad_com
         n_pixels_per_process = np.int(np.minimum(n_pixels_per_process, np.prod(dims) // n_processes))
         block_size = n_pixels_per_process
 
-        #find gsig
+        filesize = ????
+        n_chunks = int((filesize*n_processes)/(mem-remain_mem)+1)
 
 
-
-        #find p
-
-
-
-        max_shifts = mxshifts(dims)
+        max_shifts,maxdevrig = shifts(dims, movement[movement])
 
         #compute strides overlaps with virtual memory and number of processes
 
-        #rf K  gsig, size =  image quality, n process, power, approx nb of neuron
+        rf, K  gsig, =  dims, n process, power, approx nb of neuron,
 
 
 
@@ -410,13 +432,14 @@ def Params(name = 'demoMovieJ', nbneuron=30, neuronsize=None,remove_very_bad_com
     return options
 #%%
 
-def mxshifts(dims, intensity=1):
+def mxshifts(dims, intensity=4):
     """
  compute automatically the max shifts
 
 maxshifts are computed this way after reallizing that the rigid motion correction is really robust and
 will not behave differently with values that are 7 times higher than what is really required
     """
-    X = dims[0]/(10-intensity)
-    Y = dims[1]/(10 - intensity)
-    return [X,Y]
+    X = dims[0]/(11-intensity)
+    Y = dims[1]/(11 - intensity)
+    nonrig = 1/instensity
+    return [X,Y], nonrig

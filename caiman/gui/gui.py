@@ -245,7 +245,6 @@ class GUI(animation.TimedAnimation):
 #%%
 if __name__ == '__main__':
     # todo: load and fname ??
-    # load data
     mov = load(fname,fr=30)
     mean,minn,maxx = mov.mean(axis=0),mov.min(axis=0),mov.max(axis=0)
     roi = np.load('/Users/ben/Desktop/roi.npy')
