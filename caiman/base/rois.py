@@ -435,7 +435,6 @@ def nf_read_roi(fileobj):
          http://rsbweb.nih.gov/ij/developer/source/ij/io/RoiEncoder.java.html
     """
     SUB_PIXEL_RESOLUTION = 128
-
     pos = [4]
     def get8():
         pos[0] += 1
@@ -461,17 +460,37 @@ def nf_read_roi(fileobj):
     magic = fileobj.read(4)
     if magic != 'Iout':
         raise IOError('Magic number not found')
+    version = get16()
+
 
     # It seems that the roi type field occupies 2 Bytes, but only one is used
     get8()
+    # Discard second Byte:
+    get8()
     top = get16()
     left = get16()
+    get16()
+    get16()
+    get16()
 
+    getfloat()
+    getfloat()
+    getfloat()
+    getfloat()
+    get16()
+    get32()
+    get32()
+    get32()
     n_coordinates = get16()
     subtype = get16()
     if subtype != 0:
         raise ValueError('roireader: ROI subtype %s not supported (!= 0)' % subtype)
     options = get16()
+    get8()
+    get8()
+    get16()
+    get32()
+    get32()
 
     if options & SUB_PIXEL_RESOLUTION:
         getc = getfloat
@@ -492,7 +511,7 @@ def nf_read_roi(fileobj):
 #%%
 def nf_read_roi_zip(fname,dims):
     #todo todocument
-
+    import zipfile
     with zipfile.ZipFile(fname) as zf:
         coords = [nf_read_roi(zf.open(n))
                     for n in zf.namelist()]
