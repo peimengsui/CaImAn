@@ -673,8 +673,6 @@ def nb_plot_contour(image, A, d1, d2, thr=None, thr_method='max', maxthr=0.2, nr
     return p
 
 #%%
-
-
 def playMatrix(mov, gain=1.0, frate=.033):
     for frame in mov:
         if gain != 1:
@@ -686,9 +684,10 @@ def playMatrix(mov, gain=1.0, frate=.033):
             cv2.destroyAllWindows()
             break
     cv2.destroyAllWindows()
+
+
+
 #%% montage
-
-
 def matrixMontage(spcomps, *args, **kwargs):
     numcomps, width, height = spcomps.shape
     rowcols = int(np.ceil(np.sqrt(numcomps)))
@@ -779,12 +778,8 @@ def view_patches_bar(Yr, A, C, b, f, d1, d2, YrA=None, img=None):
     axcomp = pl.axes([0.05, 0.05, 0.9, 0.03])
 
     ax1 = pl.axes([0.05, 0.55, 0.4, 0.4])
-#    ax1.axis('off')
     ax3 = pl.axes([0.55, 0.55, 0.4, 0.4])
-#    ax1.axis('off')
     ax2 = pl.axes([0.05, 0.1, 0.9, 0.4])
-#    axcolor = 'lightgoldenrodyellow'
-#    axcomp = pl.axes([0.25, 0.1, 0.65, 0.03], axisbg=axcolor)
 
     s_comp = Slider(axcomp, 'Component', 0, nr + nb - 1, valinit=0)
     vmax = np.percentile(img, 98)
@@ -949,13 +944,11 @@ def plot_contours(A, Cn, thr=None, thr_method='max', maxthr=0.2, nrgthr=0.9, dis
                 if num_close_coords == 0:
                     # case angle
                     newpt = np.round(old_div(vtx[-1, :], [d2, d1])) * [d2, d1]
-                    #import ipdb; ipdb.set_trace()
                     vtx = np.concatenate((vtx, newpt[np.newaxis, :]), axis=0)
 
                 else:
                     # case one is border
                     vtx = np.concatenate((vtx, vtx[0, np.newaxis]), axis=0)
-                    #import ipdb; ipdb.set_trace()
 
             v = np.concatenate((v, vtx, np.atleast_2d([np.nan, np.nan])), axis=0)
 
