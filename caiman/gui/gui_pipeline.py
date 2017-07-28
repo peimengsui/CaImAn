@@ -173,7 +173,7 @@ if params_movie['is_dendrites'] == True:
 
 #%%
 ################ CNMF PART PATCH #################
-cnm = cnmf.CNMF(n_processes=1, k=K,,gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
+cnm = cnmf.CNMF(n_processes=1, k=K,gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
                  rf=rf, stride=stride_cnmf, memory_fact=params_movie['memory_fact'],
                 method_init=init_method, alpha_snmf=alpha_snmf, only_init_patch=params_movie['only_init_patch'],
                 gnb=params_movie['gnb'], method_deconvolution='oasis')
@@ -202,17 +202,16 @@ C_tot = C_tot[idx_components]
 #################### ########################
 #%%
 ################ CNMF PART FULL #################
-cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=gSig,dview=dview, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
+cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
                 f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis')
 cnm = cnm.fit(images)
 #%%
 A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
 
 
-
 A_thr = cm.source_extraction.cnmf.spatial.threshold_components(
-    A, dims, medw=None, thr_method='max', maxthr=0.2, nrgthr=0.99, extract_cc=True,
-    se=None, ss=None, dview=dview)
+    A.toarray(), dims, medw=None, thr_method='max', maxthr=0.2, nrgthr=0.99, extract_cc=True,
+    se=None, ss=None)
 
 A_thr = A_thr > 0
 C_thr = C
@@ -220,8 +219,7 @@ n_frames_per_bin = 10
 
 C_thr = np.array([CC.reshape([-1, n_frames_per_bin]).max(1) for CC in C_thr])
 maskROI = A_thr[:, :].reshape([dims[0], dims[1], -1], order='F').transpose([2, 0, 1]) * 1.
-
-gui.GUI(mov = m_rig,roi = maskROI, traces=C_thr)
+gui.gui.gui.GUI(mov = m_rig,roi = maskROI, traces=C_thr.T)
 
 
 
