@@ -63,8 +63,10 @@ def cnmf_patches(args_in):
             unitless number accounting how much memory should be used.
             It represents the fration of patch processed in a single thread.
              You will need to try different values to see which one would work
-
-
+             
+        low_rank_background: bool
+            if True the background is approximated with gnb components. If false every patch keeps its background (overlaps are randomly assigned to one spatial component only)
+    
         Returns:
         -------
         A_tot: matrix containing all the componenents from all the patches
@@ -111,6 +113,8 @@ def cnmf_patches(args_in):
     images = np.reshape(Yr.T, [timesteps] + list(dims), order='F')
     images = images[slices]
 
+    gnb_in_patch = 1# options['init_params']['nb']
+
     if (np.sum(np.abs(np.diff(images.reshape(timesteps, -1).T)))) > 0.1:
 
         cnm = cnmf.CNMF(n_processes = 1, k = options['init_params']['K'], gSig = options['init_params']['gSig'],
@@ -119,7 +123,7 @@ def cnmf_patches(args_in):
                 ssub = options['init_params']['ssub'], tsub = options['init_params']['tsub'],
                 p_ssub = options['patch_params']['ssub'], p_tsub = options['patch_params']['tsub'],
                 method_init = options['init_params']['method'], alpha_snmf = options['init_params']['alpha_snmf'],
-                rf=None,stride=None, memory_fact=1, gnb = options['init_params']['nb'],
+                rf=None,stride=None, memory_fact=1, gnb = gnb_in_patch,
                 only_init_patch = options['patch_params']['only_init'],
                 method_deconvolution =  options['temporal_params']['method'],
                 n_pixels_per_process = options['preprocess_params']['n_pixels_per_process'],
@@ -139,7 +143,7 @@ def cnmf_patches(args_in):
 
 
 #%%
-def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dview=None, memory_fact=1):
+def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dview=None, memory_fact=1, border_pix = 0, low_rank_background = True):
     """Function that runs CNMF in patches
 
      Either in parallel or sequentially, and return the result for each.
@@ -180,7 +184,9 @@ def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dvie
         It represents the fration of patch processed in a single thread.
          You will need to try different values to see which one would work
 
-
+    low_rank_background: bool
+        if True the background is approximated with gnb components. If false every patch keeps its background (overlaps are randomly assigned to one spatial component only)
+    
     Returns:
     -------
     A_tot: matrix containing all the components from all the patches
@@ -215,12 +221,12 @@ def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dvie
     options['temporal_params']['n_pixels_per_process']=np.int(old_div(np.prod(rfs),memory_fact))
     nb = options['spatial_params']['nb']
 
-    idx_flat,idx_2d=extract_patch_coordinates(dims, rfs, strides)
+    idx_flat,idx_2d=extract_patch_coordinates(dims, rfs, strides, border_pix = border_pix)
     args_in=[]
     for id_f,id_2d in zip(idx_flat,idx_2d):        
-        print(id_2d)
+#        print(id_2d)
         args_in.append((file_name, id_f,id_2d, options))
-
+    print(id_2d)
     st=time.time()
     if dview is not None:
         try:
@@ -259,7 +265,7 @@ def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dvie
     #INITIALIZING
     C_tot=np.zeros((count,T))
     YrA_tot=np.zeros((count,T))
-    F_tot=np.zeros((nb*num_patches,T))
+    F_tot=np.zeros((num_patches,T))
     mask=np.zeros(d)
     sn_tot=np.zeros((d))
 
@@ -334,18 +340,54 @@ def run_CNMF_patches(file_name, shape, options, rf=16, stride = 4, gnb = 1, dvie
     optional_outputs['B'] = B_tot
     optional_outputs['F'] = F_tot
     optional_outputs['mask'] = mask
-
+    
+    
+ 
     print("Generating background")
-    Im = scipy.sparse.csr_matrix((old_div(1.,mask),(np.arange(d),np.arange(d))))
-    Bm = Im.dot(B_tot)
-    A_tot = Im.dot(A_tot)
+    
+    if low_rank_background:
 
-    f = np.r_[np.atleast_2d(np.mean(F_tot,axis=0)),np.random.rand(gnb-1,T)]
+        Im = scipy.sparse.csr_matrix((old_div(1.,mask),(np.arange(d),np.arange(d))))
+        Bm = Im.dot(B_tot)
+        A_tot = Im.dot(A_tot)
+    
+        f = np.r_[np.atleast_2d(np.mean(F_tot,axis=0)),np.random.rand(gnb-1,T)]
+    
+        for _ in range(100):
+            f /= np.sqrt((f**2).sum(1)[:,None])
+            b = np.fmax(Bm.dot(F_tot.dot(f.T)).dot(np.linalg.inv(f.dot(f.T))),0)
+            f = np.fmax(np.linalg.inv(b.T.dot(b)).dot((Bm.T.dot(b)).T.dot(F_tot)),0)
+        
 
-    for _ in range(100):
-        b = np.fmax(Bm.dot(F_tot.dot(f.T)).dot(np.linalg.inv(f.dot(f.T))),0)
-        f = np.fmax(np.linalg.inv(b.T.dot(b)).dot((Bm.T.dot(b)).T.dot(F_tot)),0)
+    else:
+        
+        nA = np.ravel(np.sqrt(A_tot.power(2).sum(0)))
+        A_tot /= nA
+        A_tot = scipy.sparse.coo_matrix(A_tot)
+        C_tot *= nA[:, None]
+        YrA_tot *= nA[:, None]    
+        nB = np.ravel(np.sqrt(B_tot.power(2).sum(0)))    
+        B_tot /= nB
+        B_tot = np.array(B_tot,dtype = np.float32)
+#        B_tot = scipy.sparse.coo_matrix(B_tot)
+        F_tot *= nB[:, None]
+        
+        processed_idx = set([])
+        for _b in np.arange(B_tot.shape[-1]):
+            idx_mask = np.where(B_tot[:,_b])[0]
+            idx_mask_repeat = processed_idx.intersection(idx_mask)
+            processed_idx = processed_idx.union(idx_mask)            
+            if  len(idx_mask_repeat) > 0:                
+                B_tot[np.array(list(idx_mask_repeat), dtype = np.int),_b] = 0
 
+            
+        b = B_tot
+        f = F_tot
+        print()
+        print('******** USING ONE BACKGROUND PER PATCH ******')
+        
+    print("Generating background DONE")    
+    
     return A_tot,C_tot,YrA_tot,b,f,sn_tot, optional_outputs
 
 

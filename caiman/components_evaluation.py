@@ -13,6 +13,7 @@ from .utils.stats import mode_robust, mode_robust_fast
 from scipy.sparse import csc_matrix
 from scipy.stats import norm
 import scipy
+import cv2
 
 
 def estimate_noise_mode(traces,robust_std=False,use_mode_fast=False, return_all = False):
@@ -146,6 +147,10 @@ def find_activity_intervals(C,Npeaks = 5, tB=-5, tA = 25, thres = 0.3):
     K,T = np.shape(C)
     L = []
     for i in range(K):
+        if np.sum(np.abs(np.diff(C[i,:])))==0:
+            L.append([])        
+            print('empyty component at:'+str(i))
+            continue
         indexes = peakutils.indexes(C[i,:],thres=thres)        
         srt_ind = indexes[np.argsort(C[i,indexes])][::-1]
         srt_ind = srt_ind[:Npeaks]
@@ -179,7 +184,9 @@ def classify_components_ep(Y,A,C,b,f,Athresh = 0.1,Npeaks = 5, tB=-5, tA = 25, t
     rval = np.zeros(K)
 
     significant_samples=[]
-    for i in range(K):      
+    for i in range(K):
+        if i%200 == 0:
+            print('components evaluated:'+str(i))
         if LOC[i] is not None:
             atemp = A[:,i].toarray().flatten()
             ovlp_cmp = np.where(AA[:,i]>Athresh)[0]
@@ -190,8 +197,8 @@ def classify_components_ep(Y,A,C,b,f,Athresh = 0.1,Npeaks = 5, tB=-5, tA = 25, t
 
             indexes = np.array(list(indexes)).astype(np.int)
             px = np.where(atemp>0)[0]
-
-            mY = np.mean(Y[px,:][:,indexes],axis=-1)
+            ysqr = np.array(Y[px,:])
+            mY = np.mean(ysqr[:,indexes],axis=-1)
             significant_samples.append(indexes)
             rval[i] = scipy.stats.pearsonr(mY,atemp[px])[0]
         else:            
@@ -278,8 +285,28 @@ def evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline = Tr
     print('Removing Baseline')
     if remove_baseline:
         num_samps_bl=np.minimum(old_div(np.shape(traces)[-1],5),800)
-        traces = traces - scipy.ndimage.percentile_filter(traces,8,size=[1,num_samps_bl])
+        slow_baseline = False
+        if slow_baseline:
+            
+            traces = traces - scipy.ndimage.percentile_filter(traces,8,size=[1,num_samps_bl])
 
+        else: # fast baseline removal
+            
+            downsampfact = num_samps_bl
+            elm_missing=int(np.ceil(T*1.0/downsampfact)*downsampfact-T)
+            padbefore=int(np.floor(old_div(elm_missing,2.0)))
+            padafter=int(np.ceil(old_div(elm_missing,2.0)))    
+            tr_tmp = np.pad(traces.T,((padbefore,padafter),(0,0)),mode='reflect')
+            numFramesNew,num_traces = np.shape(tr_tmp)    
+            #% compute baseline quickly
+            print("binning data ..."); 
+            tr_BL=np.reshape(tr_tmp,(downsampfact,int(old_div(numFramesNew,downsampfact)),num_traces),order='F');
+            tr_BL=np.percentile(tr_BL,8,axis=0);
+            print("interpolating data ..."); 
+            print(tr_BL.shape)    
+            tr_BL=scipy.ndimage.zoom(np.array(tr_BL,dtype=np.float32),[downsampfact ,1],order=3, mode='constant', cval=0.0, prefilter=True)
+            traces -= tr_BL.T
+            
     print('Computing event exceptionality')    
     fitness_raw, erfc_raw,std_rr, _ = compute_event_exceptionality(traces,robust_std=robust_std,N=N)
 
@@ -292,8 +319,12 @@ def evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline = Tr
 
 
 #%%
+def chunker(seq, size):
+    for pos in xrange(0, len(seq), size):
+        yield seq[pos:pos + size]
+#%%
 def estimate_components_quality(traces, Y, A, C, b, f, final_frate = 30, Npeaks=10, r_values_min = .95,
-                                fitness_min = -100,fitness_delta_min = -100, return_all = False, N =5):
+                                fitness_min = -100,fitness_delta_min = -100, return_all = False, N =5, remove_baseline = True):
     """ Define a metric and order components according to the probabilty if some "exceptional events" (like a spike).
 
     Such probability is defined as the likeihood of observing the actual trace value over N samples given an estimated noise distribution.
@@ -354,8 +385,8 @@ def estimate_components_quality(traces, Y, A, C, b, f, final_frate = 30, Npeaks=
     """
 
     fitness_raw, fitness_delta, erfc_raw, erfc_delta, r_values, significant_samples = \
-        evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline=True,
-                                          N=N, robust_std=False, Athresh=0.1, Npeaks=Npeaks,  thresh_C=0.3)
+        evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline=remove_baseline,
+                                          N=N, robust_std=False, Athresh=0.1, Npeaks=Npeaks,  thresh_C=0.3 )
     
     idx_components_r = np.where(r_values >= r_values_min)[0]  # threshold on space consistency
     idx_components_raw = np.where(fitness_raw < fitness_min)[0] # threshold on time variability
