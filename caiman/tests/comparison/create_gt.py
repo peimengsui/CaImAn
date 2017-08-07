@@ -53,77 +53,71 @@ from caiman.tests.comparison import comparison
 
 
 #GLOBAL VAR
-params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
-                'niter_rig': 1,
-               'max_shifts': (3, 3),  # maximum allow rigid shift
-               'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
-               # if none all the splits are processed and the movie is saved
-               'num_splits_to_process_rig': None,
-               'p': 1,  # order of the autoregressive system
-               'merge_thresh': 0.8,  # merging threshold, max correlation allowed
-               'rf': 15,  # half-size of the patches in pixels. rf=25, patches are 50x50
-               'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
-               'K': 4,  # number of components per patch
-               # if dendritic. In this case you need to set init_method to
-               # sparse_nmf
-               'is_dendrites': False,
-               'init_method': 'greedy_roi',
-               'gSig': [4, 4],  # expected half size of neurons
-               'alpha_snmf': None,  # this controls sparsity
-               'final_frate': 30,
-                'r_values_min_patch' : .7,  # threshold on space consistency
-                'fitness_min_patch' : -40,  # threshold on time variability
-# threshold on time variability (if nonsparse activity)
-                'fitness_delta_min_patch' : -40,
-                'Npeaks': 10,
-                'r_values_min_full' : .85,
-                'fitness_min_full' : - 50,
-                'fitness_delta_min_full' : - 50,
-                'only_init_patch':True,
-                'gnb':1,
-                'memory_fact':1,
-                'n_chunks':10
-                }
-params_display={
-        'downsample_ratio':.2,
-        'thr_plot':0.9
-        }
-
-# params_movie = {'fname': [u'./example_movies/demoMovieJ.tif'],
-#                 'max_shifts': (2, 2),  # maximum allow rigid shift (2,2)
+# params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
 #                 'niter_rig': 1,
-#                 'splits_rig': 14,  # for parallelization split the movies in  num_splits chuncks across time
-#                 'num_splits_to_process_rig': None,  # if none all the splits are processed and the movie is saved
-#                 'strides': (48, 48),  # intervals at which patches are laid out for motion correction
-#                 'overlaps': (24, 24),  # overlap between pathes (size of patch strides+overlaps)
-#                 'splits_els': 14,  # for parallelization split the movies in  num_splits chuncks across time
-#                 'num_splits_to_process_els': [14, None],  # if none all the splits are processed and the movie is saved
-#                 'upsample_factor_grid': 3,  # upsample factor to avoid smearing when merging patches
-#                 'max_deviation_rigid': 1,  # maximum deviation allowed for patch with respect to rigid shift
-#                 'p': 1,  # order of the autoregressive system
-#                 'merge_thresh': 0.8,  # merging threshold, max correlation allow
-#                 'rf': 20,  # half-size of the patches in pixels. rf=25, patches are 50x50    20
-#                 'stride_cnmf': 5,  # amounpl.it of overlap between the patches in pixels
-#                 'K': 6,  # number of components per patch
-#                 'is_dendrites': False,  # if dendritic. In this case you need to set init_method to sparse_nmf
-#                 'init_method': 'greedy_roi',
-#                 'gSig': [6, 6],  # expected half size of neurons
-#                 'alpha_snmf': None,  # this controls sparsity
-#                 'final_frate': 10,
-#                 'r_values_min_patch': .7,  # threshold on space consistency
-#                 'fitness_min_patch': -40,  # threshold on time variability
-#                 # threshold on time variability (if nonsparse activity)
-#                 'fitness_delta_min_patch': -40,
+#                'max_shifts': (3, 3),  # maximum allow rigid shift
+#                'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
+#                # if none all the splits are processed and the movie is saved
+#                'num_splits_to_process_rig': None,
+#                'p': 1,  # order of the autoregressive system
+#                'merge_thresh': 0.8,  # merging threshold, max correlation allowed
+#                'rf': 15,  # half-size of the patches in pixels. rf=25, patches are 50x50
+#                'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
+#                'K': 4,  # number of components per patch
+#                # if dendritic. In this case you need to set init_method to
+#                # sparse_nmf
+#                'is_dendrites': False,
+#                'init_method': 'greedy_roi',
+#                'gSig': [4, 4],  # expected half size of neurons
+#                'alpha_snmf': None,  # this controls sparsity
+#                'final_frate': 30,
+#                 'r_values_min_patch' : .7,  # threshold on space consistency
+#                 'fitness_min_patch' : -40,  # threshold on time variability
+# # threshold on time variability (if nonsparse activity)
+#                 'fitness_delta_min_patch' : -40,
 #                 'Npeaks': 10,
-#                 'r_values_min_full': .85,
-#                 'fitness_min_full': - 50,
-#                 'fitness_delta_min_full': - 50,
-#                 'only_init_patch': True,
-#                 'gnb': 1,
-#                 'memory_fact': 1,
-#                 'n_chunks': 10
-#
+#                 'r_values_min_full' : .85,
+#                 'fitness_min_full' : - 50,
+#                 'fitness_delta_min_full' : - 50,
+#                 'only_init_patch':True,
+#                 'gnb':1,
+#                 'memory_fact':1,
+#                 'n_chunks':10
 #                 }
+# params_display={
+#         'downsample_ratio':.2,
+#         'thr_plot':0.9
+#         }
+
+params_movie = {'fname': ['demoMovieJ.tif'],
+                'max_shifts': (2, 2),  # maximum allow rigid shift (2,2)
+                'niter_rig': 1,
+                'splits_rig': 14,  # for parallelization split the movies in  num_splits chuncks across time
+                'num_splits_to_process_rig': None,  # if none all the splits are processed and the movie is saved
+                'p': 1,  # order of the autoregressive system
+                'merge_thresh': 0.8,  # merging threshold, max correlation allow
+                'rf': 15,  # halfsize of the patches in pixels. rf=25, patches are 50x50    20
+                'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
+                'K': 5,  # number of components per patch
+                'is_dendrites': False,  # if dendritic. In this case you need to set init_method to sparse_nmf
+                'init_method': 'greedy_roi',
+                'gSig': [4, 4],  # expected half size of neurons
+                'alpha_snmf': None,  # this controls sparsity
+                'final_frate': 10,
+                'r_values_min_patch': .7,  # threshold on space consistency
+                'fitness_min_patch': -40,  # threshold on time variability
+                # threshold on time variability (if nonsparse activity)
+                'fitness_delta_min_patch': -40,
+                'Npeaks': 10,
+                'r_values_min_full': .85,
+                'fitness_min_full': - 50,
+                'fitness_delta_min_full': - 50,
+                'only_init_patch': True,
+                'gnb': 1,
+                'memory_fact': 1,
+                'n_chunks': 10
+
+                }
 
 def create():
     """ the function that will create a groundtruth
