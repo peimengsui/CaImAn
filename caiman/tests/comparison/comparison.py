@@ -460,8 +460,8 @@ def cnmf(Cn,A_gt, A_test,C_gt,C_test, dims_gt, dims_test, dview= None, sensitivi
         C_test_thr = C_test
         C_gt_thr = C_gt
         #we would also like the difference in the number of neurons
-        diffneur = 0#A_test_thr.shape[1] - A_gt_thr.shape[1] MANUALLY OVERRIDING BY ANDREA!! 
-        print(diffneur+1)
+        diffneur = A_test_thr.shape[1] - A_gt_thr.shape[1]
+        print(diffneur)
         #computing the values
         C_test_thr = np.array([CC.reshape([-1,n_frames_per_bin]).max(1) for CC in C_test_thr])
         C_gt_thr = np.array([CC.reshape([-1,n_frames_per_bin]).max(1) for CC in C_gt_thr])
