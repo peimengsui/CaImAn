@@ -274,11 +274,7 @@ def save_memmap(filenames, base_name='Yr', resize_fact=(1, 1, 1), remove_init=0,
     #TODO: can be done online    
     Ttot = 0
     for idx, f in enumerate(filenames):
-        print(f)
-
         if is_3D:
-            #import tifffile
-#            print("Using tifffile library instead of skimage because of  3D")
 
             if idx_xy is None:
                 Yr = tifffile.imread(f)[remove_init:]
@@ -519,7 +515,6 @@ def dot_place_holder(par):
     A_, _, _  = load_memmap(A_name)      
     b_ = pickle.loads(b_)
   
-    print((idx_to_pass[-1]))
     if 'sparse' in str(type(b_)):
         if transpose:     
             outp = (b_.T.tocsc()[:,idx_to_pass].dot(A_[idx_to_pass])).T
@@ -562,8 +557,6 @@ def save_tif_to_mmap_online(movie_iterable,save_base_name='YrOL_', order = 'C',a
                                 shape=(np.prod(dims[1:]), dims[0]), order=order)
 
     for page in movie_iterable:  
-        if count%100 == 0:
-            print(count)
 
         if 'tifffile' in str(type(movie_iterable[0])):
             page=page.asarray()

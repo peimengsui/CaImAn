@@ -644,7 +644,6 @@ def extract_binary_masks_blob(A,  neuron_radius,dims,num_std_threshold=1, minCir
 
     for count,comp in enumerate(A.tocsc()[:].T):
 
-        print(count)
         comp_d=np.array(comp.todense())
         gray_image=np.reshape(comp_d,dims,order='F')
         gray_image=(gray_image-np.min(gray_image))/(np.max(gray_image)-np.min(gray_image))*255

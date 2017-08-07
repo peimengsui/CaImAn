@@ -388,8 +388,6 @@ def update_iteration (parrllcomp, len_parrllcomp, nb,C, S, bl, nr,
             YrA -= AA[jo, :].T.dot(Ctemp - C[jo, :]).T
             C[jo, :] = Ctemp.copy()
             S[jo, :] = Stemp
-            print((str(np.sum(len_parrllcomp[:count + 1])) + ' out of total ' +
-                   str(nr) + ' temporal components updated'))
 
         for ii in np.arange(nr, nr + nb):
             cc = np.maximum(YrA[:, ii] + Cin[ii], 0)

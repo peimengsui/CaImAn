@@ -1619,7 +1619,6 @@ def compute_metrics_motion_correction(fname,final_size_x,final_size_y, swap_dim,
         
     if max_shft_y_1 == 0:
         max_shft_y_1 = None
-    print ([max_shft_x,max_shft_x_1,max_shft_y,max_shft_y_1])    
     m = m[:,max_shft_x:max_shft_x_1,max_shft_y:max_shft_y_1]
     if np.sum(np.isnan(m))>0:
         print(m.shape)
@@ -1653,12 +1652,7 @@ def compute_metrics_motion_correction(fname,final_size_x,final_size_y, swap_dim,
     m = m.resize(1,1,resize_fact_flow)
     norms = []
     flows = []
-    count = 0
     for fr in m:
-        if count%100 == 0:
-            print(count)   
-        
-        count +=1    
         flow = cv2.calcOpticalFlowFarneback(tmpl,fr,None,pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags)
         
         if play_flow:
@@ -1764,7 +1758,6 @@ def motion_correct_batch_rigid(fname, max_shifts, dview = None, splits = 56 ,num
     fname_tot_rig = None
     res_rig = [] 
     for iter_ in range(num_iter):
-        print(iter_)
         old_templ = new_templ.copy()
         if iter_ == num_iter-1:
             save_movie = save_movie_rigid        
@@ -1778,8 +1771,7 @@ def motion_correct_batch_rigid(fname, max_shifts, dview = None, splits = 56 ,num
     
     
         new_templ = np.nanmedian(np.dstack([r[-1] for r in res_rig ]),-1)
-        print((old_div(np.linalg.norm(new_templ-old_templ),np.linalg.norm(old_templ))))
-    
+
     total_template = new_templ
     templates = []
     shifts = []
@@ -1867,7 +1859,6 @@ def motion_correct_batch_pwrigid(fname, max_shifts, strides, overlaps, add_to_mo
         print('Adding to movie '+ str(add_to_movie))
     
     for iter_ in range(num_iter):
-        print(iter_)
         old_templ = new_templ.copy()
     
         if iter_ == num_iter-1:
@@ -1938,8 +1929,6 @@ def tile_and_correct_wrapper(params):
         mc = np.zeros(imgs.shape,dtype = np.float32)
         shift_info = []    
     for count, img in enumerate(imgs): 
-        if count % 10 == 0:
-            print(count)
         mc[count],total_shift,start_step,xy_grid = tile_and_correct(img, template, strides, overlaps,max_shifts,
                                                                     add_to_movie=add_to_movie, newoverlaps = newoverlaps,
                                                                     newstrides = newstrides,
