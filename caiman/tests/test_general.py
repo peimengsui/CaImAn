@@ -56,7 +56,7 @@ from caiman.tests.comparison import comparison
 #GLOBAL VAR
 params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
                 'niter_rig': 1,
-                'max_shifts': (20, 20),  # maximum allow rigid shift
+                'max_shifts': (3, 3),  # maximum allow rigid shift
                 'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
                # if none all the splits are processed and the movie is saved
                'num_splits_to_process_rig': None,
@@ -76,7 +76,7 @@ params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
                 'alpha_snmf': None,  # this controls sparsity
 
                 'final_frate': 30,
-                'r_values_min_patch' : .8,  # threshold on space consistency
+                'r_values_min_patch' : .7,  # threshold on space consistency
                 'fitness_min_patch' : -40,  # threshold on time variability
                 'fitness_delta_min_patch' : -40, # threshold on time variability of the diff of the activity
                 'r_values_min_full' : .85,

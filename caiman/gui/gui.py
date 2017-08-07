@@ -128,7 +128,7 @@ class GUI(animation.TimedAnimation):
 
         # parent init
         animation.TimedAnimation.__init__(self, self.fig, interval=40, blit=True, **kwargs)
-
+        print('done init')
     @property
     def frame_seq(self):
         self._idx += 1
