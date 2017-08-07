@@ -233,19 +233,19 @@ def Params(name = 'demoMovieJ', nbneuron=30, neuronsize=None,remove_very_bad_com
     reference_mem = 10e9
     mem_per_pix = 3.6977678498329843e-09
     remain_mem = 4 
-    power = {'min': 10
+    power = {'min': 10,
     'medium': 20,
     'max':30,
     }
     movement = {
-    'really high' : 8
+    'really high' : 8,
     'high' :6,
     'medium' : 4,
     'small' : 2,
     'none': 1
     }
     nbneur = {
-    'really high' : 70
+    'really high' : 70,
     'high' :45,
     'medium' : 30,
     'small' : 20,
