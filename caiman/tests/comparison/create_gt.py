@@ -259,7 +259,7 @@ def create():
     ################ CNMF PART FULL #################
     t1 = time.time()
     cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
-                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis')
+                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis',low_rank_background=True,update_background_components=True)
     cnm = cnm.fit(images)
     ######### DISCARDING
     A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
@@ -279,7 +279,7 @@ def create():
     comp.comparison['cnmf_full_frame']['ourdata'] = [A_tot_full.copy(), C_tot_full.copy()]
     #################### ########################
     print(comp.dims)
-    comp.save_with_compare(istruth=True, params=params_movie, Cn=Cn)
+    comp.save_with_compare(istruth=True, params=params_movie, Cn=Cn, file_path='gtbk2.npz')
     log_files = glob.glob('*_LOG_*')
     for log_file in log_files:
         os.remove(log_file)

@@ -53,76 +53,76 @@ from caiman.tests.comparison import comparison
 
 
 
-#GLOBAL VAR
-# params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
-#                 'niter_rig': 1,
-#                 'max_shifts': (3, 3),  # maximum allow rigid shift
-#                 'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
-#                # if none all the splits are processed and the movie is saved
-#                'num_splits_to_process_rig': None,
-#
-#                 # intervals at which patches are laid out for motion correction
-#                 'merge_thresh': 0.8,  # merging threshold, max correlation allowed
-#                 'rf': 15,  # half-size of
-#                  # the patches in pixels. rf=25, patches are 50x50
-#                 'stride_cnmf': 6,  # amount of overlap between the patches in pixels
-#                 'K': 4,  # number of components per patch
-#                 'p': 1,  # order of the autoregressive system
-#
-#                  # if dendritic. In this case you need to set init_method to sparse_nmf
-#                 'is_dendrites': False,
-#                 'init_method': 'greedy_roi',
-#                 'gSig': [4,4],  # expected half size of neurons
-#                 'alpha_snmf': None,  # this controls sparsity
-#
-#                 'final_frate': 30,
-#                 'r_values_min_patch' : .7,  # threshold on space consistency
-#                 'fitness_min_patch' : -40,  # threshold on time variability
-#                 'fitness_delta_min_patch' : -40, # threshold on time variability of the diff of the activity
-#                 'r_values_min_full' : .85,
-#                 'fitness_min_full' : - 50,
-#                 'fitness_delta_min_full' : - 50,
-#
-#                 'Npeaks': 10,
-#                 'only_init_patch':True,
-#                 'gnb':1,
-#                 'memory_fact':1,
-#                 'n_chunks':10
-#                 }
+# GLOBAL VAR
+params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
+                'niter_rig': 1,
+                'max_shifts': (3, 3),  # maximum allow rigid shift
+                'splits_rig': 20,  # for parallelization split the movies in  num_splits chuncks across time
+               # if none all the splits are processed and the movie is saved
+               'num_splits_to_process_rig': None,
+
+                # intervals at which patches are laid out for motion correction
+                'merge_thresh': 0.8,  # merging threshold, max correlation allowed
+                'rf': 15,  # half-size of
+                 # the patches in pixels. rf=25, patches are 50x50
+                'stride_cnmf': 6,  # amount of overlap between the patches in pixels
+                'K': 6,  # number of components per patch
+                'p': 1,  # order of the autoregressive system
+
+                 # if dendritic. In this case you need to set init_method to sparse_nmf
+                'is_dendrites': False,
+                'init_method': 'greedy_roi',
+                'gSig': [4,4],  # expected half size of neurons
+                'alpha_snmf': None,  # this controls sparsity
+
+                'final_frate': 30,
+                'r_values_min_patch' : .7,  # threshold on space consistency
+                'fitness_min_patch' : -40,  # threshold on time variability
+                'fitness_delta_min_patch' : -40, # threshold on time variability of the diff of the activity
+                'r_values_min_full' : .85,
+                'fitness_min_full' : - 50,
+                'fitness_delta_min_full' : - 50,
+
+                'Npeaks': 10,
+                'only_init_patch':True,
+                'gnb':3,
+                'memory_fact':1,
+                'n_chunks':10
+                }
 params_display={
         'downsample_ratio':.2,
         'thr_plot':0.9
         }
 
-params_movie = {'fname': ['demoMovieJ.tif'],
-                'max_shifts': (2, 2),  # maximum allow rigid shift (2,2)
-                'niter_rig': 1,
-                'splits_rig': 14,  # for parallelization split the movies in  num_splits chuncks across time
-                'num_splits_to_process_rig': None,  # if none all the splits are processed and the movie is saved
-                'p': 1,  # order of the autoregressive system
-                'merge_thresh': 0.8,  # merging threshold, max correlation allow
-                'rf': 15,  # halfsize of the patches in pixels. rf=25, patches are 50x50    20
-                'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
-                'K': 5,  # number of components per patch
-                'is_dendrites': False,  # if dendritic. In this case you need to set init_method to sparse_nmf
-                'init_method': 'greedy_roi',
-                'gSig': [4, 4],  # expected half size of neurons
-                'alpha_snmf': None,  # this controls sparsity
-                'final_frate': 10,
-                'r_values_min_patch': .7,  # threshold on space consistency
-                'fitness_min_patch': -40,  # threshold on time variability
-                # threshold on time variability (if nonsparse activity)
-                'fitness_delta_min_patch': -40,
-                'Npeaks': 10,
-                'r_values_min_full': .85,
-                'fitness_min_full': - 50,
-                'fitness_delta_min_full': - 50,
-                'only_init_patch': True,
-                'gnb': 1,
-                'memory_fact': 1,
-                'n_chunks': 10
-
-                }
+# params_movie = {'fname': ['demoMovieJ.tif'],
+#                 'max_shifts': (2, 2),  # maximum allow rigid shift (2,2)
+#                 'niter_rig': 1,
+#                 'splits_rig': 14,  # for parallelization split the movies in  num_splits chuncks across time
+#                 'num_splits_to_process_rig': None,  # if none all the splits are processed and the movie is saved
+#                 'p': 1,  # order of the autoregressive system
+#                 'merge_thresh': 0.8,  # merging threshold, max correlation allow
+#                 'rf': 15,  # halfsize of the patches in pixels. rf=25, patches are 50x50    20
+#                 'stride_cnmf': 6,  # amounpl.it of overlap between the patches in pixels
+#                 'K': 5,  # number of components per patch
+#                 'is_dendrites': False,  # if dendritic. In this case you need to set init_method to sparse_nmf
+#                 'init_method': 'greedy_roi',
+#                 'gSig': [4, 4],  # expected half size of neurons
+#                 'alpha_snmf': None,  # this controls sparsity
+#                 'final_frate': 10,
+#                 'r_values_min_patch': .7,  # threshold on space consistency
+#                 'fitness_min_patch': -40,  # threshold on time variability
+#                 # threshold on time variability (if nonsparse activity)
+#                 'fitness_delta_min_patch': -40,
+#                 'Npeaks': 10,
+#                 'r_values_min_full': .85,
+#                 'fitness_min_full': - 50,
+#                 'fitness_delta_min_full': - 50,
+#                 'only_init_patch': True,
+#                 'gnb': 2,
+#                 'memory_fact': 1,
+#                 'n_chunks': 10
+#
+#                 }
 
 def test_general():
     """ the function that will do the test 
@@ -155,27 +155,28 @@ def test_general():
 
     global params_movie
     global params_diplay
-    fname = params_movie['fname']
+    fname1 = params_movie['fname']
     niter_rig = params_movie['niter_rig']
     max_shifts = params_movie['max_shifts']
     splits_rig = params_movie['splits_rig']
     num_splits_to_process_rig = params_movie['num_splits_to_process_rig']
 
-    download_demo(fname[0])
-    fname = os.path.join('example_movies', fname[0])
+    download_demo(fname1[0])
+    fname = os.path.join('example_movies', fname1[0])
     m_orig = cm.load(fname)
     min_mov = m_orig[:400].min()
     comp=comparison.Comparison()
     comp.dims = np.shape(m_orig)[1:]
 
-    if os.path.exists('./caiman/tests/comparison/groundtruth_demoMovie.npz') and fname == ['demoMovieJ.tif']:
+    if os.path.exists('./caiman/tests/comparison/groundtruth_demoMovie.npz') and fname1 == ['demoMovieJ.tif']:
         os.rename('./caiman/tests/comparison/groundtruth.npz','./caiman/tests/comparison/groundtruth_demoSue.npz')
         os.rename('./caiman/tests/comparison/groundtruth_demoMovie.npz', './caiman/tests/comparison/groundtruth.npz')
         print('changing of ground truth')
-    elif os.path.exists('./caiman/tests/comparison/groundtruth_demoSue.npz') and fname == ['Sue_2x_3000_40_-46.tif']:
+    elif os.path.exists('./caiman/tests/comparison/groundtruth_demoSue.npz') and fname1 == ['Sue_2x_3000_40_-46.tif']:
         os.rename('./caiman/tests/comparison/groundtruth.npz', './caiman/tests/comparison/groundtruth_demoMovie.npz')
         os.rename('./caiman/tests/comparison/groundtruth_demoSue.npz', './caiman/tests/comparison/groundtruth.npz')
         print('changing of ground truth')
+    else :print('pb')
 
     ################ RIG CORRECTION #################
     t1 = time.time()
@@ -190,7 +191,7 @@ def test_general():
     comp.comparison['rig_shifts']['timer'] = time.time() - t1
     comp.comparison['rig_shifts']['ourdata'] = mc.shifts_rig
 ###########################################
-    os.system('cls' if os.name == 'nt' else 'clear') # some clearings of the outputs
+    #os.system('cls' if os.name == 'nt' else 'clear') # some clearings of the outputs
     
 
     if not params_movie.has_key('max_shifts'):
@@ -279,7 +280,7 @@ def test_general():
     comp.comparison['cnmf_on_patch']['timer'] = time.time() - t1
     comp.comparison['cnmf_on_patch']['ourdata'] = [A_tot.copy(),C_tot.copy()]
 #################### ########################
-    os.system('cls' if os.name == 'nt' else 'clear')
+    #os.system('cls' if os.name == 'nt' else 'clear')
 
     
     
@@ -306,7 +307,7 @@ def test_general():
     comp.comparison['cnmf_full_frame']['timer'] = time.time() - t1
     comp.comparison['cnmf_full_frame']['ourdata'] = [A_tot_full.copy(),C_tot_full.copy()]
 #################### ########################
-    os.system('cls' if os.name == 'nt' else 'clear')
+   # os.system('cls' if os.name == 'nt' else 'clear')
     comp.save_with_compare(istruth=False, params=params_movie, Cn=Cn)
     log_files = glob.glob('*_LOG_*')
     for log_file in log_files:

@@ -152,7 +152,7 @@ class Comparison(object):
             
             
             
-    def save_with_compare(self, istruth=False, params=None, dview=None, Cn=None):
+    def save_with_compare(self, istruth=False, params=None, dview=None, Cn=None, file_path="./caiman/tests/comparison/groundtruth.npz"):
         """save the comparison as well as the images of the precision recall calculations
  
  
@@ -212,8 +212,7 @@ class Comparison(object):
 
                 """
          #getting the DATA FOR COMPARISONS   
-        assert (params !=None and self.cnmpatch != None)
-        print('we need the paramters in order to save anything\n')
+        assert (params !=None and self.cnmpatch != None) ,'we need the paramters in order to save anything\n'
         #actions on the sparse matrix
         cnm = self.cnmpatch.__dict__
         cnmpatch = deletesparse(cnm)
@@ -240,13 +239,9 @@ class Comparison(object):
                         'cnmf_full_frame':self.comparison['cnmf_full_frame']['timer'],
                         'rig_shifts':self.comparison['rig_shifts']['timer']
                                 }
-                
+
                 }
 
-        file_path="./caiman/tests/comparison/groundtruth.npz"
-        
-
-        
         #OPENNINGS
         #if we want to set this data as truth
         if istruth:
