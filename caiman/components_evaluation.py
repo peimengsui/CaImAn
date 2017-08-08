@@ -273,6 +273,9 @@ def evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline = Tr
         indexes of samples used to obtain the spatial mask by average
 
     """
+    MAXnumsampbl =2000
+
+
     tB = np.minimum(-2, np.floor( -5. / 30 * final_frate))
     tA = np.maximum(5, np.ceil(25. / 30 * final_frate))
     dims,T=np.shape(Y)[:-1],np.shape(Y)[-1]
@@ -284,7 +287,7 @@ def evaluate_components(Y, traces, A, C, b, f, final_frate, remove_baseline = Tr
 
     print('Removing Baseline')
     if remove_baseline:
-        num_samps_bl=np.minimum(old_div(np.shape(traces)[-1],5),800)
+        num_samps_bl=np.minimum(old_div(np.shape(traces)[-1],5),MAXnumsampbl)
         slow_baseline = False
         if slow_baseline:
             
