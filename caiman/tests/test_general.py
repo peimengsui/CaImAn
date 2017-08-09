@@ -85,7 +85,7 @@ params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
 
                 'Npeaks': 10,
                 'only_init_patch':True,
-                'gnb':3,
+                'gnb':1,
                 'memory_fact':1,
                 'n_chunks':10
                 }
@@ -124,12 +124,14 @@ params_display={
 #
 #                 }
 
-def test_general():
+def test_general(isbigdataset =False):
     """ the function that will do the test 
  
  
     A shorter version than the demo pipeline that calls comparison for the real test work 
- 
+
+    isbigdataset: Bool
+        Just for power user when using this framework to compare dataset with each other with different params
             
  
         Raises:
@@ -148,6 +150,7 @@ def test_general():
 
         no groundtruth
 
+        not a good file
  
     """
 #\bug       
@@ -155,19 +158,14 @@ def test_general():
 
     global params_movie
     global params_diplay
-    fname1 = params_movie['fname']
-    niter_rig = params_movie['niter_rig']
-    max_shifts = params_movie['max_shifts']
-    splits_rig = params_movie['splits_rig']
-    num_splits_to_process_rig = params_movie['num_splits_to_process_rig']
-
-    download_demo(fname1[0])
-    fname = os.path.join('example_movies', fname1[0])
-    m_orig = cm.load(fname)
-    min_mov = m_orig[:400].min()
-    comp=comparison.Comparison()
-    comp.dims = np.shape(m_orig)[1:]
-
+    fname1 = params_movie['fname'][0]
+    if fname1[-3:-1] == 'ti':
+        ismemmap = False
+    elif fname1[-3:-1] == 'mma':
+        ismemmap = True
+        fname_new = fname1
+    else: raise("not a good file")
+    comp = comparison.Comparison()
     if os.path.exists('./caiman/tests/comparison/groundtruth_demoMovie.npz') and fname1 == ['demoMovieJ.tif']:
         os.rename('./caiman/tests/comparison/groundtruth.npz','./caiman/tests/comparison/groundtruth_demoSue.npz')
         os.rename('./caiman/tests/comparison/groundtruth_demoMovie.npz', './caiman/tests/comparison/groundtruth.npz')
@@ -176,47 +174,65 @@ def test_general():
         os.rename('./caiman/tests/comparison/groundtruth.npz', './caiman/tests/comparison/groundtruth_demoMovie.npz')
         os.rename('./caiman/tests/comparison/groundtruth_demoSue.npz', './caiman/tests/comparison/groundtruth.npz')
         print('changing of ground truth')
-    else :print('pb')
-
-    ################ RIG CORRECTION #################
-    t1 = time.time()
-    mc = MotionCorrect(fname, min_mov,
-                   max_shifts=max_shifts, niter_rig=niter_rig
-                   , splits_rig=splits_rig,
-                   num_splits_to_process_rig=num_splits_to_process_rig,
-                   shifts_opencv = True, nonneg_movie = True)
-    mc.motion_correct_rigid(save_movie=True)
-    m_rig = cm.load(mc.fname_tot_rig)
-    bord_px_rig = np.ceil(np.max(mc.shifts_rig)).astype(np.int)
-    comp.comparison['rig_shifts']['timer'] = time.time() - t1
-    comp.comparison['rig_shifts']['ourdata'] = mc.shifts_rig
-###########################################
-    #os.system('cls' if os.name == 'nt' else 'clear') # some clearings of the outputs
-    
-
-    if not params_movie.has_key('max_shifts'):
-        fnames = params_movie['fname']
-        border_to_0 = 0
+    if isbigdataset:
+        c, dview, n_processes = cm.cluster.setup_cluster(
+            backend='local', n_processes=None, single_thread=False)
     else:
-        fnames = [mc.fname_tot_rig]
-        border_to_0 = bord_px_rig
-    
-    idx_xy = None
-    remove_init = 0
-    add_to_movie = -np.nanmin(m_rig) + 1  # movie must be positive
-    downsample_factor = 1 
-    base_name = fname[0].split('/')[-1][:-4]
-    name_new = cm.save_memmap_each(fnames, base_name=base_name, resize_fact=(
-        1, 1, downsample_factor), remove_init=remove_init,
-            idx_xy=idx_xy, add_to_movie=add_to_movie, border_to_0=border_to_0)
-    name_new.sort()
-    
-    
-    if len(name_new) > 1:
-        fname_new = cm.save_memmap_join(
-            name_new, base_name='Yr', n_chunks=params_movie['n_chunks'], dview=None)
-    else:
-        fname_new = name_new[0]
+        dview =None;n_processes=1
+    if not ismemmap:
+        niter_rig = params_movie['niter_rig']
+        max_shifts = params_movie['max_shifts']
+        splits_rig = params_movie['splits_rig']
+        num_splits_to_process_rig = params_movie['num_splits_to_process_rig']
+
+        download_demo(fname1[0])
+        fname = os.path.join('example_movies', fname1[0])
+        m_orig = cm.load(fname)
+        min_mov = m_orig[:400].min()
+        comp=comparison.Comparison()
+        comp.dims = np.shape(m_orig)[1:]
+
+
+
+        ################ RIG CORRECTION #################
+        t1 = time.time()
+        mc = MotionCorrect(fname, min_mov,dview=dview,
+                       max_shifts=max_shifts, niter_rig=niter_rig
+                       , splits_rig=splits_rig,
+                       num_splits_to_process_rig=num_splits_to_process_rig,
+                       shifts_opencv = True, nonneg_movie = True)
+        mc.motion_correct_rigid(save_movie=True)
+        m_rig = cm.load(mc.fname_tot_rig)
+        bord_px_rig = np.ceil(np.max(mc.shifts_rig)).astype(np.int)
+        comp.comparison['rig_shifts']['timer'] = time.time() - t1
+        comp.comparison['rig_shifts']['ourdata'] = mc.shifts_rig
+    ###########################################
+        os.system('cls' if os.name == 'nt' else 'clear') # some clearings of the outputs
+
+
+        if not params_movie.has_key('max_shifts'):
+            fnames = params_movie['fname']
+            border_to_0 = 0
+        else:
+            fnames = [mc.fname_tot_rig]
+            border_to_0 = bord_px_rig
+
+        idx_xy = None
+        remove_init = 0
+        add_to_movie = -np.nanmin(m_rig) + 1  # movie must be positive
+        downsample_factor = 1
+        base_name = fname[0].split('/')[-1][:-4]
+        name_new = cm.save_memmap_each(fnames, base_name=base_name, resize_fact=(
+            1, 1, downsample_factor), remove_init=remove_init,
+                idx_xy=idx_xy, add_to_movie=add_to_movie, border_to_0=border_to_0,dview=dview)
+        name_new.sort()
+
+
+        if len(name_new) > 1:
+            fname_new = cm.save_memmap_join(
+                name_new, base_name='Yr', n_chunks=params_movie['n_chunks'], dview=dview)
+        else:
+            fname_new = name_new[0]
 
     Yr, dims, T = cm.load_memmap(fname_new)
     print("##################################")
@@ -251,10 +267,10 @@ def test_general():
             
 ################ CNMF PART PATCH #################
     t1 = time.time()
-    cnm = cnmf.CNMF(n_processes=1, k=K, gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
-                dview=None, rf=rf, stride=stride_cnmf, memory_fact=params_movie['memory_fact'],
+    cnm = cnmf.CNMF(n_processes=n_processes, k=K, gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
+                dview=dview, rf=rf, stride=stride_cnmf, memory_fact=params_movie['memory_fact'],
                 method_init=init_method, alpha_snmf=alpha_snmf, only_init_patch=params_movie['only_init_patch'],
-                gnb=params_movie['gnb'], method_deconvolution='oasis')
+                gnb=params_movie['gnb'], method_deconvolution='oasis',low_rank_background=False,update_background_components=False)
     comp.cnmpatch  = copy.copy(cnm)
     cnm = cnm.fit(images)
     A_tot = cnm.A
@@ -280,14 +296,13 @@ def test_general():
     comp.comparison['cnmf_on_patch']['timer'] = time.time() - t1
     comp.comparison['cnmf_on_patch']['ourdata'] = [A_tot.copy(),C_tot.copy()]
 #################### ########################
-    #os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-    
-    
+
 ################ CNMF PART FULL #################
     t1 = time.time()
-    cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
-                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis')
+    cnm = cnmf.CNMF(n_processes=n_processes,dview=dview, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
+                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis',low_rank_background=False,update_background_components=False)
     cnm = cnm.fit(images)
     ############ DISCARDING
     A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
@@ -307,8 +322,9 @@ def test_general():
     comp.comparison['cnmf_full_frame']['timer'] = time.time() - t1
     comp.comparison['cnmf_full_frame']['ourdata'] = [A_tot_full.copy(),C_tot_full.copy()]
 #################### ########################
-   # os.system('cls' if os.name == 'nt' else 'clear')
-    comp.save_with_compare(istruth=False, params=params_movie, Cn=Cn)
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    comp.save_with_compare(istruth=False, skipmotion =ismemmap,params=params_movie, Cn=Cn,dview=dview)
     log_files = glob.glob('*_LOG_*')
     for log_file in log_files:
         os.remove(log_file)

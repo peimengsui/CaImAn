@@ -51,8 +51,7 @@ from caiman.motion_correction import MotionCorrect
 from caiman.components_evaluation import estimate_components_quality
 from caiman.tests.comparison import comparison
 
-
-#GLOBAL VAR
+# GLOBAL VAR
 # params_movie = {'fname':['Sue_2x_3000_40_-46.tif'],
 #                 'niter_rig': 1,
 #                'max_shifts': (3, 3),  # maximum allow rigid shift
@@ -119,11 +118,18 @@ params_movie = {'fname': ['demoMovieJ.tif'],
 
                 }
 
-def create():
+
+def create(groundtruth=False,isbigdataset =False):
     """ the function that will create a groundtruth
 
 
     A shorter version than the demo pipeline that calls comparison for the real test work
+
+    groundtruth: String
+        Only if you want to precise an output folder and name instead of the regular groundtruth one
+
+    isbigdataset: Bool
+        Just for power user when using this framework to compare dataset with each other with different params
 
     Raise:
     -----
@@ -132,66 +138,83 @@ def create():
 
         ('we were not able to read the file to compare it\n')
 
+        ("not a good file")
+
     """
     # \bug
     # \warning
 
     global params_movie
     global params_diplay
-    fname = params_movie['fname']
-    niter_rig = params_movie['niter_rig']
-    max_shifts = params_movie['max_shifts']
-    splits_rig = params_movie['splits_rig']
-    num_splits_to_process_rig = params_movie['num_splits_to_process_rig']
-
-    download_demo(fname[0])
-    fname = os.path.join('example_movies', fname[0])
-    m_orig = cm.load(fname)
-    min_mov = m_orig[:400].min()
+    fname = params_movie['fname'][0]
+    if fname[-3:-1] == 'ti':
+        ismemmap = False
+    elif fname[-3:-1] == 'mma':
+        ismemmap = True
+        fname_new = fname
+    else: raise("not a good file")
     comp = comparison.Comparison()
-    comp.dims = np.shape(m_orig)[1:]
-
-    ################ RIG CORRECTION #################
-    t1 = time.time()
-    mc = MotionCorrect(fname, min_mov,
-                       max_shifts=max_shifts, niter_rig=niter_rig
-                       , splits_rig=splits_rig,
-                       num_splits_to_process_rig=num_splits_to_process_rig,
-                       shifts_opencv=True, nonneg_movie=True)
-    mc.motion_correct_rigid(save_movie=True)
-    m_rig = cm.load(mc.fname_tot_rig)
-    bord_px_rig = np.ceil(np.max(mc.shifts_rig)).astype(np.int)
-    comp.comparison['rig_shifts']['timer'] = time.time() - t1
-    comp.comparison['rig_shifts']['ourdata'] = mc.shifts_rig
-    ###########################################
-
-
-
-
-    if not params_movie.has_key('max_shifts'):
-        fnames = params_movie['fname']
-        border_to_0 = 0
-    else:  # elif not params_movie.has_key('overlaps'):
-        fnames = [mc.fname_tot_rig]
-        border_to_0 = bord_px_rig
-        m_els = m_rig
-
-    idx_xy = None
-    add_to_movie = -np.nanmin(m_els) + 1  # movie must be positive
-    remove_init = 0
-    downsample_factor = 1
-    base_name = fname[0].split('/')[-1][:-4]
-    name_new = cm.save_memmap_each(fnames, base_name=base_name, resize_fact=(
-        1, 1, downsample_factor), remove_init=remove_init,
-                                   idx_xy=idx_xy, add_to_movie=add_to_movie, border_to_0=border_to_0)
-    name_new.sort()
-
-    if len(name_new) > 1:
-        fname_new = cm.save_memmap_join(
-            name_new, base_name='Yr', n_chunks=params_movie['n_chunks'], dview=None)
+    if isbigdataset:
+        c, dview, n_processes = cm.cluster.setup_cluster(
+            backend='local', n_processes=None, single_thread=False)
     else:
-        print('One file only, not saving!')
-        fname_new = name_new[0]
+        dview =None;n_processes=1
+
+    if not ismemmap:
+
+        niter_rig = params_movie['niter_rig']
+        max_shifts = params_movie['max_shifts']
+        splits_rig = params_movie['splits_rig']
+        num_splits_to_process_rig = params_movie['num_splits_to_process_rig']
+
+        download_demo(fname[0])
+        fname = os.path.join('example_movies', fname[0])
+        m_orig = cm.load(fname)
+        min_mov = m_orig[:400].min()
+
+        comp.dims = np.shape(m_orig)[1:]
+
+        ################ RIG CORRECTION #################
+        t1 = time.time()
+        mc = MotionCorrect(fname, min_mov,
+                           max_shifts=max_shifts, niter_rig=niter_rig
+                           , splits_rig=splits_rig,
+                           num_splits_to_process_rig=num_splits_to_process_rig,
+                           shifts_opencv=True, nonneg_movie=True,dview=dview)
+        mc.motion_correct_rigid(save_movie=True)
+        m_rig = cm.load(mc.fname_tot_rig)
+        bord_px_rig = np.ceil(np.max(mc.shifts_rig)).astype(np.int)
+        comp.comparison['rig_shifts']['timer'] = time.time() - t1
+        comp.comparison['rig_shifts']['ourdata'] = mc.shifts_rig
+        ###########################################
+
+
+
+
+        if not params_movie.has_key('max_shifts'):
+            fnames = params_movie['fname']
+            border_to_0 = 0
+        else:  # elif not params_movie.has_key('overlaps'):
+            fnames = [mc.fname_tot_rig]
+            border_to_0 = bord_px_rig
+            m_els = m_rig
+
+        idx_xy = None
+        add_to_movie = -np.nanmin(m_els) + 1  # movie must be positive
+        remove_init = 0
+        downsample_factor = 1
+        base_name = fname[0].split('/')[-1][:-4]
+        name_new = cm.save_memmap_each(fnames, base_name=base_name, resize_fact=(
+            1, 1, downsample_factor), remove_init=remove_init,
+                                       idx_xy=idx_xy, add_to_movie=add_to_movie, border_to_0=border_to_0,dview=dview)
+        name_new.sort()
+
+        if len(name_new) > 1:
+            fname_new = cm.save_memmap_join(
+                name_new, base_name='Yr', n_chunks=params_movie['n_chunks'], dview=dview)
+        else:
+            print('One file only, not saving!')
+            fname_new = name_new[0]
 
     Yr, dims, T = cm.load_memmap(fname_new)
     images = np.reshape(Yr.T, [T] + list(dims), order='F')
@@ -223,8 +246,8 @@ def create():
 
             ################ CNMF PART PATCH #################
     t1 = time.time()
-    cnm = cnmf.CNMF(n_processes=1, k=K, gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
-                    dview=None, rf=rf, stride=stride_cnmf, memory_fact=params_movie['memory_fact'],
+    cnm = cnmf.CNMF(n_processes=n_processes, k=K, gSig=gSig, merge_thresh=params_movie['merge_thresh'], p=params_movie['p'],
+                    dview=dview, rf=rf, stride=stride_cnmf, memory_fact=params_movie['memory_fact'],
                     method_init=init_method, alpha_snmf=alpha_snmf, only_init_patch=params_movie['only_init_patch'],
                     gnb=params_movie['gnb'], method_deconvolution='oasis')
     comp.cnmpatch = copy.copy(cnm)
@@ -258,8 +281,9 @@ def create():
 
     ################ CNMF PART FULL #################
     t1 = time.time()
-    cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
-                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis',low_rank_background=True,update_background_components=True)
+    cnm = cnmf.CNMF(n_processes=n_processes,dview=dview, k=A_tot.shape, gSig=gSig, merge_thresh=merge_thresh, p=p, Ain=A_tot, Cin=C_tot,
+                    f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis', low_rank_background=True,
+                    update_background_components=True)
     cnm = cnm.fit(images)
     ######### DISCARDING
     A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
@@ -270,8 +294,9 @@ def create():
     Npeaks = params_movie['Npeaks']
     traces = C + YrA
     idx_components, idx_components_bad, fitness_raw, fitness_delta, r_values = estimate_components_quality(
-    traces, Y, A, C, b, f, final_frate = final_frate, Npeaks = Npeaks, r_values_min = r_values_min, fitness_min = fitness_min,
-    fitness_delta_min = fitness_delta_min, return_all = True)
+        traces, Y, A, C, b, f, final_frate=final_frate, Npeaks=Npeaks, r_values_min=r_values_min,
+        fitness_min=fitness_min,
+        fitness_delta_min=fitness_delta_min, return_all=True)
     ###########
     A_tot_full = A_tot.tocsc()[:, idx_components]
     C_tot_full = C_tot[idx_components]
@@ -279,8 +304,11 @@ def create():
     comp.comparison['cnmf_full_frame']['ourdata'] = [A_tot_full.copy(), C_tot_full.copy()]
     #################### ########################
     print(comp.dims)
-    comp.save_with_compare(istruth=True, params=params_movie, Cn=Cn, file_path='gtbk2.npz')
+    if groundtruth:
+        comp.save_with_compare(istruth=True, skipmotion =ismemmap, params=params_movie, Cn=Cn,dview=dview,file_path=groundtruth)
+    else:
+        comp.save_with_compare(istruth=True, skipmotion =ismemmap, params=params_movie, Cn=Cn,dview=dview)
+
     log_files = glob.glob('*_LOG_*')
     for log_file in log_files:
         os.remove(log_file)
-
