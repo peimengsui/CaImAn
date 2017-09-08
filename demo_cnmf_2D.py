@@ -101,7 +101,7 @@ c, dview, n_processes = cm.cluster.setup_cluster(
     backend='local', n_processes=None, single_thread=False)
 #%%
 cnm = cnmf.CNMF(n_processes = 2, method_init='corr_pnr', k=20, gSig=(3,3), gSiz = (10,10), merge_thresh=.8,
-                p=1, dview=dview, tsub=1, ssub=1, Ain=None, rf=(25,25), stride=(10,10),
+                p=1, dview=None, tsub=1, ssub=1, Ain=None, rf=(25,25), stride=(10,10),
                 only_init_patch=True, gnb=10, nb_patch=3, method_deconvolution='oasis', 
                 low_rank_background=False, update_background_components=False, min_corr = .8, 
                 min_pnr = 10, normalize_init = False, deconvolve_options_init = None, 
@@ -130,7 +130,7 @@ if memmap:
 else:
     cnm.fit(Y)
 #%%
-A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
+A_tot, C_tot, b_tot, f_tot, YrA_tot, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
 
 #%%    
 crd = cm.utils.visualization.plot_contours(A, cn_filter, thr=.99, vmax = 0.95)
@@ -162,4 +162,35 @@ cm.utils.visualization.view_patches_bar(Yr, scipy.sparse.coo_matrix(A.tocsc()[:,
 #%%
 cm.utils.visualization.view_patches_bar(Yr, scipy.sparse.coo_matrix(A.tocsc()[:, idx_components_bad]), C[
                                idx_components_bad, :], b, f, dims[0], dims[1], YrA=YrA[idx_components_bad, :], img=cn_filter)    
+
+# %% rerun updating the components to refine
+cnm = cnmf.CNMF(n_processes=1, k=A_tot.shape, gSig=[gSig,gSig], merge_thresh=0.8, p=1, dview=dview, Ain=A_tot,
+                Cin=C_tot, b_in = b_tot,
+                f_in=f_tot, rf=None, stride=None, method_deconvolution='oasis',gnb = None,
+                low_rank_background = False, update_background_components = False)
+
+memmap = True  # must be True for patches
+if memmap:
+    fname_new = cm.save_memmap([fname], base_name='Yr')
+    Yr, dims, T = cm.load_memmap(fname_new)
+    cnm.fit(Yr.T.reshape((T,) + dims, order='F'))
+else:
+    cnm.fit(Y)
+    
+    
+#%%
+A, C, b, f, YrA, sn = cnm.A, cnm.C, cnm.b, cnm.f, cnm.YrA, cnm.sn
+#%%
+import pylab as pl
+idx_components = range(np.shape(A)[-1])  
+# TODO: show screenshot 14
+pl.subplot(1, 2, 1)
+crd = cm.utils.visualization.plot_contours(A.tocsc()[:, idx_components], cn_filter, thr=.95)
+pl.subplot(1, 2, 2)
+crd = cm.utils.visualization.plot_contours(A.tocsc()[:, idx_components_bad], cn_filter, thr=.99)
+  
+    
+    
+    
+    
     
