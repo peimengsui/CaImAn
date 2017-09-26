@@ -188,6 +188,57 @@ fitness_raw, fitness_delta, erfc_raw, erfc_delta, r_values, significant_samples 
 #%%
 from caiman.components_evaluation import evaluate_components_CNN
 predictions,final_crops = evaluate_components_CNN(A,dims,gSig,model_name = 'use_cases/CaImAnpaper/cnn_model')
+
+##%%
+#def sliding_window_new(image, overlaps, strides):
+#    ''' efficiently and lazily slides a window across the image
+#     Parameters
+#     ----------
+#     img:ndarray 2D
+#         image that needs to be sliced
+#     windowSize: tuple 
+#         dimension of the patch
+#     strides: tuple
+#         stride in wach dimension    
+#
+#     Returns:
+#     -------
+#     iterator containing five items
+#     dim_1, dim_2 coordinates in the patch grid 
+#     x, y: bottom border of the patch in the original matrix  
+#     patch: the patch
+#     '''
+#    windowSize = np.add(overlaps,strides)
+#    range_1 = list(range(0, image.shape[0]-windowSize[0], strides[0])) + [image.shape[0]-windowSize[0]]
+#    range_2 = list(range(0, image.shape[1]-windowSize[1], strides[1])) + [image.shape[1]-windowSize[1]]
+#    for dim_1, x in enumerate(range_1):
+#        for dim_2,y in enumerate(range_2):
+#            x0 = x
+#            x1 = x + windowSize[0]
+#            y0 = y
+#            y1 = y + windowSize[1]
+#            # yield the current window
+#            yield (x0, x1, y0 ,y1 ,image[x0:x1,y0:y1])
+##%%
+#import json as simplejson
+#from keras.models import model_from_json
+#import cv2
+#a = np.array([np.maximum(0,img[-1]-np.median(img[-1])) for img in sliding_window_new(Cn,[13,13],[1,1])])
+#patch_size = 50
+#json_file = open('use_cases/CaImAnpaper/cnn_model' +'.json', 'r')
+#loaded_model_json = json_file.read()
+#json_file.close()
+#loaded_model = model_from_json(loaded_model_json)
+#loaded_model.load_weights('use_cases/CaImAnpaper/cnn_model' +'.h5')
+#half_crop = np.minimum(gSig[0]*4+1,patch_size)
+#
+#final_crops = np.array([cv2.resize(im/np.linalg.norm(im),(patch_size ,patch_size )) for im in a])
+#predictions = loaded_model.predict(final_crops[:,:,:,np.newaxis], batch_size=32, verbose=1)
+##%%
+#pl.imshow(np.reshape(predictions[:,1],[(60-13),(80-13)])[:,::-1])
+##%%
+#predictions,final_crops = evaluate_components_CNN(a,(60,80),gSig,model_name = 'use_cases/CaImAnpaper/cnn_model')
+            
 #%%
 threshold = .95
 from caiman.utils.visualization import matrixMontage

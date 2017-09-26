@@ -926,6 +926,7 @@ def update_num_components(t, sv, Ab, Cf, Yres_buf, Y_buf, rho_buf,
     sv += rho_buf.get_last_frames(1).squeeze()
 
     num_added = 0
+    plot_residual = True
     while num_added < max_num_added:
 
         if first:
@@ -949,7 +950,15 @@ def update_num_components(t, sv, Ab, Cf, Yres_buf, Y_buf, rho_buf,
                                        dims, order='F').ravel()
 
         Ypx = Yres_buf.T[indeces, :]
-
+        
+        if plot_residual:
+            img_temp = Yres_buf.mean(0)
+            img_temp= np.repeat(img_temp.reshape(dims,order = 'F')[:,:,None],3,axis = -1)
+            cv2.rectangle(img_temp,(ij[1]-5, ij[0]-5),(ij[1]+5, ij[0]+5),[0,0,1])
+            cv2.imshow('frame', cv2.resize(img_temp,(dims[1]*2,dims[0]*2))*3)
+            cv2.waitKey(1000)
+            
+        
         ain = np.maximum(np.mean(Ypx, 1), 0)
         na = ain.dot(ain)
         if not na:
@@ -970,7 +979,7 @@ def update_num_components(t, sv, Ab, Cf, Yres_buf, Y_buf, rho_buf,
         ain, cin, cin_res = rank1nmf(Ypx, ain)  # expects and returns normalized ain
 
         rval = corr(ain.copy(), np.mean(Ypx, -1))
-#        print(rval)
+        print(rval)
         if rval > rval_thr:
             # na = sqrt(ain.dot(ain))
             # ain /= na

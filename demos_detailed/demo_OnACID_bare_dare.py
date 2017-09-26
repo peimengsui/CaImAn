@@ -45,12 +45,13 @@ def load_object(filename):
 
 
 #%%
-fls_starts = ['/home/andrea/CaImAn/example_movies/demoMovie.tif', # quick demo
-              'example_movies/13592_3_0000_slice1.hdf5', # Mesoscope
+fls_starts = ['example_movies/demoMovie.tif', # quick demo
+              #'example_movies/13592_3_0000_slice1.hdf5', # Mesoscope
+              'example_movies/13592_3_00006_0000_slice1.hdf5',
               'example_movies/14062_1_00004_00001_slice1.hdf5' #dense labeling
               ]
 
-fls_start = fls_starts[2]
+fls_start = fls_starts[1]
 fls = glob.glob(fls_start)
 fls.sort()
 print(fls)
@@ -88,7 +89,7 @@ elif fls_start == fls_starts[1]:
     max_shift = 10 // ds
     mot_corr = True
     gSig = tuple(np.array([3, 3]) // ds + 1)  # expected half size of neurons
-    K = 50
+    K = 1
     merge_thresh = 0.8
     p = 1
 elif fls_start == fls_starts[2]:
@@ -178,7 +179,7 @@ Cf = np.r_[cnm_init.C_on[:, :initbatch], cnm_init.f2]
 # pl.figure(figsize=(20,13))
 plot_contours = False
 compute_cn = False
-play_reconstr = True
+play_reconstr = False
 resize_fact = .5
 
 cnm2 = load_object(fls[0][:-4] + '_DS_' + str(ds) + '.pkl')
@@ -211,8 +212,7 @@ for ffll in end_files:  # np.array(fls)[np.array([1,2,3,4,5,-5,-4,-3,-2,-1])]:
             if mot_corr:
                 # templ = cnm2.Ab[:, -1].dot(cnm2.C_on[-1, t - 1]
                 #                            ).toarray().reshape(cnm2.dims, order='F') * img_norm
-                templ = (cnm2.Ab.data[:cnm2.Ab.indptr[1]] * cnm2.C_on[0, t - 1]).reshape(cnm2.dims, order='F') * img_norm
-        
+                templ = (cnm2.Ab.data[:cnm2.Ab.indptr[1]] * cnm2.C_on[0, t - 1]).reshape(cnm2.dims, order='F') * img_norm        
                 newcn = (Y_1 - img_min).motion_correct(max_shift, max_shift, template=templ)[0].local_correlations(swap_dim=False)
                 
                 Cn = np.maximum(Cn, newcn)
