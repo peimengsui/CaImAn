@@ -134,14 +134,14 @@ for count in range(count_start,T):
     
 #%%
 cur_mov = 'movie_10_100'
-save_path = '/mnt/home/zxinsheng/CaImAn/movie_input_frames_2250/' + cur_mov
-np.savez('/mnt/home/zxinsheng/CaImAn/movie_10_100', img_frame_list)
+save_path = '/mnt/home/zxinsheng/CaImAn/use_cases/edge-cutter/movie_input_frames_2250/' + cur_mov
+np.savez(save_path, img_frame_list)
 
 #%%
 import pickle
 
 cur_pos = 'bbox_10_100'
-save_path_pos = '/mnt/home/zxinsheng/CaImAn/movie_input_frames_2250/' + cur_pos
+save_path_pos = '/mnt/home/zxinsheng/CaImAn/use_cases/edge-cutter/movie_input_frames_2250/' + cur_pos
 position = open(save_path_pos, 'wb')
 pickle.dump(cms_list, position)
 position.close()
