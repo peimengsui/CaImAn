@@ -109,17 +109,41 @@ max_mov = m_res.max()
 #%%
 m_res.play()
 #%%
-count_start = 1
+# avg different number of frames  
+count_start = 10
 bin_ = 1
+
+img_frame_list = []
+cms_list = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
     active = np.where(exceptionality[:,count]<-20)[0]
     print(active)
+    # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
+    img_frame_list.append(img_temp)
+    cms_list.append(cms)
+    
     for cm__ in cms:
         cm_=cm__[::]
         img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
     
     cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
     cv2.waitKey(100)
+    
+#%%
+cur_mov = 'movie_10_100'
+save_path = '/mnt/home/zxinsheng/CaImAn/movie_input_frames_2250/' + cur_mov
+np.savez('/mnt/home/zxinsheng/CaImAn/movie_10_100', img_frame_list)
+
+#%%
+import pickle
+
+cur_pos = 'bbox_10_100'
+save_path_pos = '/mnt/home/zxinsheng/CaImAn/movie_input_frames_2250/' + cur_pos
+position = open(save_path_pos, 'wb')
+pickle.dump(cms_list, position)
+position.close()
+
+
