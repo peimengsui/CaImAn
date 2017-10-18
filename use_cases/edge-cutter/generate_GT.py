@@ -12,6 +12,16 @@ import scipy
 import pylab as pl
 import cv2
 import glob
+
+parser = argparse.ArgumentParser(description='Movie Generation Script')
+parser.add_argument('--file-index', type=int, default=0, metavar='N',
+                    help='index of raw input data')
+parser.add_argument('--seed', type=int, default=1111, metavar='N',
+                    help='random seed to exclude neuron')
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/generated_input_data',
+                    help='directory to save output file')
+args = parser.parse_args()
+np.random.seed(args.seed)
 #%% file name
 inputs = [{'fname':'/mnt/ceph/neuro/labeling/neurofinder.03.00.test/images/final_map/Yr_d1_498_d2_467_d3_1_order_C_frames_2250_.mmap', 'gSig' : [8,8]},
           {'fname':'/mnt/ceph/neuro/labeling/neurofinder.04.00.test/images/final_map/Yr_d1_512_d2_512_d3_1_order_C_frames_3000_.mmap', 'gSig' : [5,5]},
@@ -33,21 +43,22 @@ inputs = [{'fname':'/mnt/ceph/neuro/labeling/neurofinder.03.00.test/images/final
 #fname_new = '/mnt/ceph/neuro/labeling/neurofinder.00.00/images/final_map/Yr_d1_512_d2_512_d3_1_order_C_frames_2936_.mmap'
 #fname_new = '/mnt/ceph/neuro/labeling/neurofinder.01.01/images/final_map/Yr_d1_512_d2_512_d3_1_order_C_frames_1825_.mmap'
 
-fname_new = inputs[0]['fname']
-gSig = inputs[0]['gSig']
+fname_new = inputs[args.file_index]['fname']
+filename = fname_new.split('/')[-1][:-4]
+gSig = inputs[args.file_index]['gSig']
 gt_file = os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'match_masks.npz')
 #%% you guys sort out how to deal with these big beasts
-fname_new = glob.glob('/mnt/ceph/neuro/labeling/k53_20160530/images/mmap/*.mmap')
-fname_new.sort()
-gt_file = '/mnt/ceph/neuro/labeling/k53_20160530/Yr_d1_512_d2_512_d3_1_order_C_frames_116043_.match_masks.npz'
+#fname_new = glob.glob('/mnt/ceph/neuro/labeling/k53_20160530/images/mmap/*.mmap')
+#fname_new.sort()
+#gt_file = '/mnt/ceph/neuro/labeling/k53_20160530/Yr_d1_512_d2_512_d3_1_order_C_frames_116043_.match_masks.npz'
 
-fname_new = glob.glob('/mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/images/mmap/*.mmap')
-fname_new.sort()
-gt_file = ' /mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/images/final_map/Yr_d1_463_d2_472_d3_1_order_C_frames_90000_.match_masks.npz'
+#fname_new = glob.glob('/mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/images/mmap/*.mmap')
+#fname_new.sort()
+#gt_file = ' /mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/images/final_map/Yr_d1_463_d2_472_d3_1_order_C_frames_90000_.match_masks.npz'
 
-fname_new = glob.glob('/mnt/ceph/neuro/labeling/J123_2015-11-20_L01_0/images/mmap/*.mmap')
-fname_new.sort()
-gt_file = '/mnt/ceph/neuro/labeling/J123_2015-11-20_L01_0/images/final_map/Yr_d1_458_d2_477_d3_1_order_C_frames_41000_.match_masks.npz'
+#fname_new = glob.glob('/mnt/ceph/neuro/labeling/J123_2015-11-20_L01_0/images/mmap/*.mmap')
+#fname_new.sort()
+#gt_file = '/mnt/ceph/neuro/labeling/J123_2015-11-20_L01_0/images/final_map/Yr_d1_458_d2_477_d3_1_order_C_frames_41000_.match_masks.npz'
 #%%
 with np.load(gt_file, encoding = 'latin1') as ld:
     print(ld.keys())
@@ -71,7 +82,7 @@ images = np.reshape(Yr.T, [T] + list(dims), order='F')
 Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
-idx_exclude = np.arange(100)
+idx_exclude = np.random.choice(A_gt_thr.shape[1], A_gt_thr.shape[1]*0.6, replace=False)
 idx_comps = np.setdiff1d(np.arange(A_gt.shape[-1]),idx_exclude)
 #final_frate = 10
 #r_values_min = .8  # threshold on space consistency
@@ -104,6 +115,7 @@ else:
 fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
 #%%
 m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))
+m_test = cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))
 #%%
 max_mov = m_res.max() 
 #%%
@@ -114,36 +126,39 @@ count_start = 10
 bin_ = 1
 
 img_frame_list = []
+img_test_list = []
 cms_list = []
+cms_test_List = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
+    img_test_temp = (m_test[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
     active = np.where(exceptionality[:,count]<-20)[0]
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
+    cms_test = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_comp[active]].T]
     img_frame_list.append(img_temp)
+    img_test_list.append(img_test_temp)
     cms_list.append(cms)
-    
-    for cm__ in cms:
+    cms_test_list.append(cms_test)
+    for cm__ in cms_test:
         cm_=cm__[::]
-        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+        img_test_temp = cv2.rectangle(img_test_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
     
-    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    cv2.imshow('frame', cv2.resize(img_test_temp*2,(dims[1]*2,dims[0]*2)))
     cv2.waitKey(100)
     
 #%%
-cur_mov = 'movie_10_100'
-save_path = '/mnt/home/zxinsheng/CaImAn/use_cases/edge-cutter/movie_input_frames_2250/' + cur_mov
-np.savez(save_path, img_frame_list)
-
+#save_path = os.path.join(args.save_dir, filename+'.npz')
+#np.savez(save_path, img_frame_list)
+#np.savez(save_path, img_test_list)
 #%%
-import pickle
+#import pickle
 
-cur_pos = 'bbox_10_100'
-save_path_pos = '/mnt/home/zxinsheng/CaImAn/use_cases/edge-cutter/movie_input_frames_2250/' + cur_pos
-position = open(save_path_pos, 'wb')
-pickle.dump(cms_list, position)
-position.close()
+#save_path_pos = os.path.join(args.save_dir, filename+'.pkl')
+#position = open(save_path_pos, 'wb')
+#pickle.dump(cms_list, position)
+#position.close()
 
 
