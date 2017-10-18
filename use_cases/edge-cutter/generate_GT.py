@@ -12,6 +12,7 @@ import scipy
 import pylab as pl
 import cv2
 import glob
+import pickle
 import argparse
 
 parser = argparse.ArgumentParser(description='Movie Generation Script')
@@ -83,7 +84,13 @@ images = np.reshape(Yr.T, [T] + list(dims), order='F')
 Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
-idx_exclude = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
+
+train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
+test = np.setdiff1d(np.arange(A_gt.shape[-1]), train)
+
+#-------------------------------------train-----------------------------------
+
+idx_exclude = train # neurons that are displayed
 idx_comps = np.setdiff1d(np.arange(A_gt.shape[-1]),idx_exclude)
 #final_frate = 10
 #r_values_min = .8  # threshold on space consistency
@@ -116,50 +123,110 @@ else:
 fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
 #%%
 m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))
-m_test = cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))
 #%%
 max_mov = m_res.max() 
 #%%
 #m_res.play()
 #%%
-# avg different number of frames  
 count_start = 10
-bin_ = 1
+#bin_ = 10
+
 
 img_frame_list = []
-img_test_list = []
 cms_list = []
-cms_test_List = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
-    img_test_temp = (m_test[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
     active = np.where(exceptionality[:,count]<-20)[0]
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
-    cms_test = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_comps[active]].T]
     img_frame_list.append(img_temp)
-    img_test_list.append(img_test_temp)
     cms_list.append(cms)
-    cms_test_list.append(cms_test)
-    for cm__ in cms_test:
+    for cm__ in cms:
         cm_=cm__[::]
-        img_test_temp = cv2.rectangle(img_test_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
-    
-    cv2.imshow('frame', cv2.resize(img_test_temp*2,(dims[1]*2,dims[0]*2)))
+        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
     cv2.waitKey(100)
-    
-#%%
-#save_path = os.path.join(args.save_dir, filename+'.npz')
-#np.savez(save_path, img_frame_list)
-#np.savez(save_path, img_test_list)
-#%%
-#import pickle
 
-#save_path_pos = os.path.join(args.save_dir, filename+'.pkl')
-#position = open(save_path_pos, 'wb')
-#pickle.dump(cms_list, position)
-#position.close()
+
+#%%
+save_path = os.path.join(args.save_dir, filename+'.npz')
+np.savez(save_path, img_frame_list)
+#%%
+save_path_pos = os.path.join(args.save_dir, filename+'.pkl')
+position = open(save_path_pos, 'wb')
+pickle.dump(cms_list, position)
+position.close()
+
+
+
+#-----------------------------test---------------
+idx_exclude = test # neurons that are displayed
+idx_comps = np.setdiff1d(np.arange(A_gt.shape[-1]),idx_exclude)
+#final_frate = 10
+#r_values_min = .8  # threshold on space consistency
+#fitness_min = -20  # threshold on time variability    
+#fitness_delta_min = -20
+Npeaks = 5
+#%%
+traces_gt = YrA_gt + C_gt
+downsampfact = 500
+elm_missing=int(np.ceil(T*1.0/downsampfact)*downsampfact-T)
+padbefore=int(np.floor(elm_missing/2))
+padafter=int(np.ceil(elm_missing/2))    
+tr_tmp = np.pad(traces_gt.T,((padbefore,padafter),(0,0)),mode='reflect')
+numFramesNew,num_traces = np.shape(tr_tmp)    
+#% compute baseline quickly
+print("binning data ..."); 
+tr_BL=np.reshape(tr_tmp,(downsampfact,int(numFramesNew/downsampfact),num_traces),order='F');
+tr_BL=np.percentile(tr_BL,8,axis=0)            
+print("interpolating data ..."); 
+print(tr_BL.shape)    
+tr_BL=scipy.ndimage.zoom(np.array(tr_BL,dtype=np.float32),[downsampfact ,1],order=3, mode='constant', cval=0.0, prefilter=True)
+if padafter==0:
+    traces_gt -= tr_BL.T
+else:
+    traces_gt -= tr_BL[padbefore:-padafter].T
+
+
+#traces_gt = scipy.signal.savgol_filter(traces_gt,5,2)          
+#%%
+fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
+#%%
+m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))
+#%%
+max_mov = m_res.max() 
+#%%
+#m_res.play()
+#%%
+count_start = 10
+#bin_ = 10
+img_frame_list = []
+cms_list = []
+for count in range(count_start,T):
+    img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
+#    img_temp = m_res[count].copy().astype(np.float32)/max_mov
+    active = np.where(exceptionality[:,count]<-20)[0]
+    print(active)
+    # cms: a list of positions of bounding box
+    cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
+    img_frame_list.append(img_temp)
+    cms_list.append(cms)
+    for cm__ in cms:
+        cm_=cm__[::]
+        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    cv2.waitKey(100)
+
+
+#%%
+save_path = os.path.join(args.save_dir, filename+'_test.npz')
+np.savez(save_path, img_frame_list)
+#%%
+save_path_pos = os.path.join(args.save_dir, filename+'_test.pkl')
+position = open(save_path_pos, 'wb')
+pickle.dump(cms_list, position)
+position.close()
 
 
