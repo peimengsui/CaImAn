@@ -12,6 +12,7 @@ import scipy
 import pylab as pl
 import cv2
 import glob
+import argparse
 
 parser = argparse.ArgumentParser(description='Movie Generation Script')
 parser.add_argument('--file-index', type=int, default=0, metavar='N',
@@ -82,7 +83,7 @@ images = np.reshape(Yr.T, [T] + list(dims), order='F')
 Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
-idx_exclude = np.random.choice(A_gt_thr.shape[1], A_gt_thr.shape[1]*0.6, replace=False)
+idx_exclude = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
 idx_comps = np.setdiff1d(np.arange(A_gt.shape[-1]),idx_exclude)
 #final_frate = 10
 #r_values_min = .8  # threshold on space consistency
@@ -119,7 +120,7 @@ m_test = cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_
 #%%
 max_mov = m_res.max() 
 #%%
-m_res.play()
+#m_res.play()
 #%%
 # avg different number of frames  
 count_start = 10
@@ -137,7 +138,7 @@ for count in range(count_start,T):
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
-    cms_test = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_comp[active]].T]
+    cms_test = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_comps[active]].T]
     img_frame_list.append(img_temp)
     img_test_list.append(img_test_temp)
     cms_list.append(cms)
