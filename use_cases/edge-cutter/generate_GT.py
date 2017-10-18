@@ -48,7 +48,7 @@ inputs = [{'fname':'/mnt/ceph/neuro/labeling/neurofinder.03.00.test/images/final
 fname_new = inputs[args.file_index]['fname']
 filename = fname_new.split('/')[-1][:-4]
 gSig = inputs[args.file_index]['gSig']
-gt_file = os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'match_masks.npz')
+gt_file = os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-5] + 'match_masks.npz')
 #%% you guys sort out how to deal with these big beasts
 #fname_new = glob.glob('/mnt/ceph/neuro/labeling/k53_20160530/images/mmap/*.mmap')
 #fname_new.sort()
@@ -143,11 +143,11 @@ for count in range(count_start,T):
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
     img_frame_list.append(img_temp)
     cms_list.append(cms)
-    for cm__ in cms:
-        cm_=cm__[::]
-        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
-    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
-    cv2.waitKey(100)
+    #for cm__ in cms:
+    #    cm_=cm__[::]
+    #    img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    #cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    #cv2.waitKey(100)
 
 
 #%%
@@ -213,18 +213,18 @@ for count in range(count_start,T):
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
     img_frame_list.append(img_temp)
     cms_list.append(cms)
-    for cm__ in cms:
-        cm_=cm__[::]
-        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
-    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
-    cv2.waitKey(100)
+    #for cm__ in cms:
+    #    cm_=cm__[::]
+    #    img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    #cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    #cv2.waitKey(100)
 
 
 #%%
-save_path = os.path.join(args.save_dir, filename+'_test.npz')
+save_path = os.path.join(args.save_dir, filename+'test.npz')
 np.savez(save_path, img_frame_list)
 #%%
-save_path_pos = os.path.join(args.save_dir, filename+'_test.pkl')
+save_path_pos = os.path.join(args.save_dir, filename+'test.pkl')
 position = open(save_path_pos, 'wb')
 pickle.dump(cms_list, position)
 position.close()
