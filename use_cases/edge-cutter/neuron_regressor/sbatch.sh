@@ -6,14 +6,22 @@
 #SBATCH --time=100:00:00
 #SBATCH --mem=10GB
 #SBATCH --mail-type=END
-#SBATCH --mail-user=rf1711@nyu.edu
+#SBATCH --mail-user=ps3336@nyu.edu
 #SBATCH --output=slurm_%j.out
 
 module purge
-module load python/intel/2.7.12
+module load gcc/7.2.0
+module load python3/3.6.2
+module load cuda/8.0.61
+pip3 install http://download.pytorch.org/whl/cu80/torch-0.2.0.post3-cp36-cp36m-manylinux1_x86_64.whl 
+pip3 install torchvision
 
-python movie_based.py
+RUNDIR=/mnt/home/speimeng/dev/CaImAn/use_cases/edge-cutter/neuron_regressor
+mkdir $RUNDIR
 
-##python main.py --data ./data/gutenberg --cuda --log-interval 200 --epochs 25 --shuffle True --suffix _shuffle_gu --save model_shuffle_gu.pt --k 10000
-##python main.py --cuda --log-interval 200 --epochs 1 --suffix _shuffle --shuffle True --save model_shuffle.pt --k 10000
-##python dcGAN.py --dataset cifar10 --dataroot . --cuda
+DATADIR=$SCRATCH/my_project/data
+
+cd $RUNDIR
+
+python main.py
+
