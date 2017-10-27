@@ -20,7 +20,7 @@ parser.add_argument('--file-index', type=int, default=0, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/generated_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/zero_input_data',
                     help='directory to save output file')
 args = parser.parse_args()
 np.random.seed(args.seed)
@@ -48,7 +48,7 @@ inputs = [{'fname':'/mnt/ceph/neuro/labeling/neurofinder.03.00.test/images/final
 fname_new = inputs[args.file_index]['fname']
 filename = fname_new.split('/')[-1][:-4]
 gSig = inputs[args.file_index]['gSig']
-gt_file = os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-5] + 'match_masks.npz')
+gt_file = os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-5] + '.match_masks.npz')
 #%% you guys sort out how to deal with these big beasts
 #fname_new = glob.glob('/mnt/ceph/neuro/labeling/k53_20160530/images/mmap/*.mmap')
 #fname_new.sort()
@@ -85,7 +85,7 @@ Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
 
-train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
+train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.99), replace=False)
 test = np.setdiff1d(np.arange(A_gt.shape[-1]), train)
 
 #-------------------------------------train-----------------------------------
