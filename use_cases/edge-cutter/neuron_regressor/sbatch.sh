@@ -1,10 +1,11 @@
 #!/bin/bash
-#
+#SBATCH --nodes=1
 #SBATCH --job-name=myPythonJobGPU
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
 #SBATCH --time=100:00:00
 #SBATCH --mem=10GB
+#SBATCH --gres=gpu:1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=ps3336@nyu.edu
 #SBATCH --output=slurm_%j.out
