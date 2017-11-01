@@ -20,7 +20,7 @@ parser.add_argument('--file-index', type=int, default=0, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/zero_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/25_input_data',
                     help='directory to save output file')
 
 parser.add_argument('--random-choice', type=int, default= 0.6,
@@ -145,7 +145,7 @@ cms_list = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
-    active = np.where(exceptionality[:,count]<- args.exceptionality_thred)[0]
+    active = np.where(exceptionality[:,count]< args.exceptionality_thred)[0]
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]

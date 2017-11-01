@@ -65,20 +65,20 @@ def main():
     args = parser.parse_args()
 
     
-    train_image  = np.load('/mnt/ceph/neuro/edge_cutter/generated_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz')
+    train_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz')
     train_image = train_image['arr_0']
 
-    train_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/generated_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl', 'rb')) 
+    train_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl', 'rb')) 
 
-    no_neuron_image = np.load('/mnt/ceph/neuro/edge_cutter/zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
+    no_neuron_image = np.load('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
     no_neuron_image = no_neuron_image['arr_0']
 
-    no_neuron_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb'))
+    no_neuron_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb'))
 
 
-    test_image  = np.load('/mnt/ceph/neuro/edge_cutter/generated_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_._test.npz')
+    test_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
     test_image = test_image['arr_0']
-    test_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/generated_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_._test.pkl', 'rb')) 
+    test_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb')) 
     '''
     train_image = pickle.load(open(\
         '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/train_image.pkl', 'rb')) 
