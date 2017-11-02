@@ -20,10 +20,10 @@ parser.add_argument('--file-index', type=int, default=0, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/25_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/25_zero_input_data',
                     help='directory to save output file')
 
-parser.add_argument('--random-choice', type=int, default= 0.6,
+parser.add_argument('--random-choice', type=int, default= 0.99,
                     help='how much percentage neuron take out from train data')
 parser.add_argument('--exceptionality-thred', type=int, default=-25,
                     help='threshold for counting activated neuron')
@@ -115,6 +115,7 @@ tr_tmp = np.pad(traces_gt.T,((padbefore,padafter),(0,0)),mode='reflect')
 numFramesNew,num_traces = np.shape(tr_tmp)    
 #% compute baseline quickly
 print("binning data ..."); 
+
 tr_BL=np.reshape(tr_tmp,(downsampfact,int(numFramesNew/downsampfact),num_traces),order='F');
 tr_BL=np.percentile(tr_BL,8,axis=0)            
 print("interpolating data ..."); 
@@ -125,7 +126,8 @@ if padafter==0:
 else:
     traces_gt -= tr_BL[padbefore:-padafter].T
 
-
+import pdb
+pdb.set_trace()
 #traces_gt = scipy.signal.savgol_filter(traces_gt,5,2)          
 #%%
 fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
@@ -200,6 +202,8 @@ else:
 
 #traces_gt = scipy.signal.savgol_filter(traces_gt,5,2)          
 #%%
+import pdb
+pdb.set_trace()
 fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
 #%%
 m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comps]) + b_gt.dot(f_gt),dims+(-1,),order = 'F').transpose([2,0,1]))

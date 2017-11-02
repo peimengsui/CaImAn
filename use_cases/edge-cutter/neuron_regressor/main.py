@@ -63,8 +63,8 @@ parser.add_argument('--valid_num_batchs_of_1_epoch', default=60, type=int,
 def main():
     global args
     args = parser.parse_args()
-
-    
+    import pdb
+    pdb.set_trace()
     train_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz')
     train_image = train_image['arr_0']
 
@@ -74,7 +74,6 @@ def main():
     no_neuron_image = no_neuron_image['arr_0']
 
     no_neuron_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb'))
-
 
     test_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
     test_image = test_image['arr_0']
@@ -192,7 +191,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
     """
         Run one train epoch
     """
-    
+    import pdb
+    pdb.set_trace() 
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
