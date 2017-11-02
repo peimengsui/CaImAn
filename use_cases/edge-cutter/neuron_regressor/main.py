@@ -3,7 +3,7 @@ import os
 import shutil
 import time
 import numpy as np
-
+import pickle
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -61,10 +61,10 @@ parser.add_argument('--valid_num_batchs_of_1_epoch', default=60, type=int,
 
 
 def main():
+    train_losses = []
+    valid_losses = []
     global args
     args = parser.parse_args()
-    import pdb
-    pdb.set_trace()
     train_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz')
     train_image = train_image['arr_0']
 
@@ -172,11 +172,12 @@ def main():
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch)
+        train_mse = train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
         mse = validate(val_loader, model, criterion)
-
+        train_losses.append(train_mse)
+        valid_losses.append(mse)
         # remember best prec@1 and save checkpoint
         is_best = mse < best_mse
         best_mse = min(mse, best_mse)
@@ -185,14 +186,13 @@ def main():
             'state_dict': model.state_dict(),
             'best_mse': best_mse,
         }, is_best, filename=os.path.join(args.save_dir, 'checkpoint_{}.tar'.format(epoch)))
-
+    pickle.dump( train_losses, open( "save_temp/train_losses.pkl", "wb" ) )
+    pickle.dump( valid_losses, open( "save_temp/valid_losses.pkl", "wb" ) )
 
 def train(train_loader, model, criterion, optimizer, epoch):
     """
         Run one train epoch
     """
-    import pdb
-    pdb.set_trace() 
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -249,7 +249,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         n_train += 1
         if n_train > args.num_batchs_of_1_epoch:
             break
-
+        return losses.avg
 
 def validate(val_loader, model, criterion):
     """

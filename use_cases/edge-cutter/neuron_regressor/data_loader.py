@@ -18,8 +18,6 @@ def data_generator(image_arr, locations, no_neuron_image, no_locations, batch_si
         neuron_count = []
         
         while sample_num < num_non_empty:
-            import pdb
-            pdb.set_trace()
             current_index = np.random.randint(len(image_arr))
             
             current_image = image_arr[current_index].reshape(512, 512)
