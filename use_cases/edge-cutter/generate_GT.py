@@ -85,7 +85,7 @@ Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
 
-train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.99), replace=False)
+train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
 test = np.setdiff1d(np.arange(A_gt.shape[-1]), train)
 
 #-------------------------------------train-----------------------------------
@@ -126,7 +126,7 @@ m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comp
 #%%
 max_mov = m_res.max() 
 #%%
-#m_res.play()
+m_res.play()
 #%%
 count_start = 10
 #bin_ = 10
@@ -143,11 +143,11 @@ for count in range(count_start,T):
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
     img_frame_list.append(img_temp)
     cms_list.append(cms)
-    #for cm__ in cms:
-    #    cm_=cm__[::]
-    #    img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
-    #cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
-    #cv2.waitKey(100)
+    for cm__ in cms:
+        cm_=cm__[::]
+        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    cv2.waitKey(100)
 
 
 #%%

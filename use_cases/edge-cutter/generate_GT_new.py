@@ -20,12 +20,12 @@ parser.add_argument('--file-index', type=int, default=0, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/25_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/50_input_data',
                     help='directory to save output file')
 
 parser.add_argument('--random-choice', type=int, default= 0.6,
                     help='how much percentage neuron take out from train data')
-parser.add_argument('--exceptionality-thred', type=int, default=-25,
+parser.add_argument('--exceptionality-thred', type=int, default=-50,
                     help='threshold for counting activated neuron')
 
 
