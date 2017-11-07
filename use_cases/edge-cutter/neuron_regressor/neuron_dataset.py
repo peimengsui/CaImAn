@@ -124,7 +124,7 @@ class NeuronDataset(Dataset):
         box = self.label[idx]
         bool_i = [np.abs(center_i-co[0]) < 30 for co in box]
         bool_j = [np.abs(center_j-co[1]) < 30 for co in box]
-        count = sum(bool_i and bool_j)
+        count = float(sum(bool_i and bool_j))
 
         if self.transform:
             cropped_image = self.transform(cropped_image)

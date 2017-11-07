@@ -177,6 +177,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # compute output
         output = model(input_var)
+        import pdb
+        pdb.set_trace()
         loss = criterion(output, target_var)
 
         # compute gradient and do SGD step
@@ -204,7 +206,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                       epoch, i, len(train_loader), batch_time=batch_time,
                       data_time=data_time, loss=losses))
         
-        return losses.avg
+    return losses.avg
 
 def validate(val_loader, model, criterion):
     """
