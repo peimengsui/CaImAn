@@ -2,7 +2,54 @@ import pickle
 import torchvision
 from PIL import Image
 import numpy as np
-from torchvision.transforms import functional as F
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
+import numbers
+
+def pad(img, padding, fill=0):
+    """Pad the given PIL Image on all sides with the given "pad" value.
+    Args:
+        img (PIL Image): Image to be padded.
+        padding (int or tuple): Padding on each border. If a single int is provided this
+            is used to pad all borders. If tuple of length 2 is provided this is the padding
+            on left/right and top/bottom respectively. If a tuple of length 4 is provided
+            this is the padding for the left, top, right and bottom borders
+            respectively.
+        fill: Pixel fill value. Default is 0. If a tuple of
+            length 3, it is used to fill R, G, B channels respectively.
+    Returns:
+        PIL Image: Padded image.
+    """
+    if not _is_pil_image(img):
+        raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
+
+    if not isinstance(padding, (numbers.Number, tuple)):
+        raise TypeError('Got inappropriate padding arg')
+    if not isinstance(fill, (numbers.Number, str, tuple)):
+        raise TypeError('Got inappropriate fill arg')
+
+    if isinstance(padding, collections.Sequence) and len(padding) not in [2, 4]:
+        raise ValueError("Padding must be an int or a 2, or 4 element tuple, not a " +
+                         "{} element tuple".format(len(padding)))
+
+    return ImageOps.expand(img, border=padding, fill=fill)
+
+
+def crop(img, i, j, h, w):
+    """Crop the given PIL Image.
+    Args:
+        img (PIL Image): Image to be cropped.
+        i: Upper pixel coordinate.
+        j: Left pixel coordinate.
+        h: Height of the cropped image.
+        w: Width of the cropped image.
+    Returns:
+        PIL Image: Cropped image.
+    """
+    if not _is_pil_image(img):
+        raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
+
+    return img.crop((j, i, j + w, i + h))
 
 class RandomCrop(object):
     """Crop the given PIL Image at a random location.
@@ -49,11 +96,11 @@ class RandomCrop(object):
             PIL Image: Cropped image.
         """
         if self.padding > 0:
-            img = F.pad(img, self.padding)
+            img = pad(img, self.padding)
 
         i, j, h, w = self.get_params(img, self.size)
 
-        return F.crop(img, i, j, h, w), i, j
+        return crop(img, i, j, h, w), i, j
 
 class NeuronDataset(Dataset):
     """Neuron dataset."""
@@ -75,9 +122,8 @@ class NeuronDataset(Dataset):
 
     def __getitem__(self, idx):
         image = Image.fromarray(self.frame[idx,:,:])
-        crop = RandomCrop(size = 64)
-        cropped_image, center_i, center_j = image.crop()
-        cropped_image = np.asarray(cropped_image)
+        random_crop = RandomCrop(size = 64)
+        cropped_image, center_i, center_j = image.random_crop()
 
         box = self.label[idx]
         bool_i = [(np.abs(center_i, co[0] < 30)) for co in box]
@@ -85,6 +131,6 @@ class NeuronDataset(Dataset):
         count = sum(bool_i and bool_j)
 
         if self.transform:
-            sample = self.transform(sample)
+            cropped_image = self.transform(cropped_image)
 
         return cropped_image, count

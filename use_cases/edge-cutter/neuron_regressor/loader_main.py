@@ -13,7 +13,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import vgg
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from neuron_dataset import NeuronDataset
 
 #from data_loader import *
@@ -100,12 +100,12 @@ def main():
     train_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl',
                                            frame_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz',
                                            transform=transforms.Compose([
-                                               ToTensor()
+                                               transforms.ToTensor()
                                            ]))
     valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl',
                                            frame_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz',
                                            transform=transforms.Compose([
-                                               ToTensor()
+                                               transforms.ToTensor()
                                            ]))
     train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=4)
     val_loader = DataLoader(valid_dataset, batch_size=4, shuffle=False, num_workers=4)
