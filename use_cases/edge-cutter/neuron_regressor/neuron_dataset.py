@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import numbers
-
+import random 
 def pad(img, padding, fill=0):
     """Pad the given PIL Image on all sides with the given "pad" value.
     Args:
@@ -20,8 +20,6 @@ def pad(img, padding, fill=0):
     Returns:
         PIL Image: Padded image.
     """
-    if not _is_pil_image(img):
-        raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
 
     if not isinstance(padding, (numbers.Number, tuple)):
         raise TypeError('Got inappropriate padding arg')
@@ -46,8 +44,6 @@ def crop(img, i, j, h, w):
     Returns:
         PIL Image: Cropped image.
     """
-    if not _is_pil_image(img):
-        raise TypeError('img should be PIL Image. Got {}'.format(type(img)))
 
     return img.crop((j, i, j + w, i + h))
 
@@ -121,13 +117,13 @@ class NeuronDataset(Dataset):
         return len(self.label)
 
     def __getitem__(self, idx):
-        image = Image.fromarray(self.frame[idx,:,:])
+        image = Image.fromarray(self.frame[idx,:,:], 'L')
         random_crop = RandomCrop(size = 64)
-        cropped_image, center_i, center_j = image.random_crop()
+        cropped_image, center_i, center_j = random_crop(image)
 
         box = self.label[idx]
-        bool_i = [(np.abs(center_i, co[0] < 30)) for co in box]
-        bool_j = [(np.abs(center_j, co[1] < 30)) for co in box]
+        bool_i = [np.abs(center_i-co[0]) < 30 for co in box]
+        bool_j = [np.abs(center_j-co[1]) < 30 for co in box]
         count = sum(bool_i and bool_j)
 
         if self.transform:

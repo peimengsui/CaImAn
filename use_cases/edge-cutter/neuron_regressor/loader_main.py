@@ -107,8 +107,8 @@ def main():
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=4)
-    val_loader = DataLoader(valid_dataset, batch_size=4, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=1)
+    val_loader = DataLoader(valid_dataset, batch_size=4, shuffle=False, num_workers=1)
     if torch.cuda.is_available():
         criterion = nn.MSELoss().cuda()
     else:
@@ -163,8 +163,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
     
     #for i, (input, target) in enumerate(train_loader):
     for i, (input, target) in enumerate(train_loader):
-
         # measure data loading time
+        target = target.float()
         data_time.update(time.time() - end)
         if torch.cuda.is_available():
             target = target.cuda(async=True)
@@ -200,10 +200,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
                       epoch, i, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses, top1=top1))
+                      data_time=data_time, loss=losses))
         
         return losses.avg
 
@@ -222,6 +221,7 @@ def validate(val_loader, model, criterion):
 
     #for i, (input, target) in enumerate(val_loader):
     for i, (input, target) in enumerate(val_loader):
+        target = target.float()
         if torch.cuda.is_available():
             target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input, volatile=True)
@@ -251,10 +251,8 @@ def validate(val_loader, model, criterion):
         if i % args.print_freq == 0:
             print('Test: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                      i, len(val_loader), batch_time=batch_time, loss=losses,
-                      top1=top1))
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+                      i, len(val_loader), batch_time=batch_time, loss=losses))
 
     print(' * MSE {losses.avg:.3f}'
           .format(losses=losses))
