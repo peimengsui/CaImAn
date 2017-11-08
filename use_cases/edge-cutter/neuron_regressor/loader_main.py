@@ -35,8 +35,8 @@ parser.add_argument('--epochs', default=300, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=128, type=int,
-                    metavar='N', help='mini-batch size (default: 128)')
+parser.add_argument('-b', '--batch-size', default=64, type=int,
+                    metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', '--learning-rate', default=0.05, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -107,8 +107,8 @@ def main():
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=1)
-    val_loader = DataLoader(valid_dataset, batch_size=4, shuffle=False, num_workers=1)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     if torch.cuda.is_available():
         criterion = nn.MSELoss().cuda()
     else:
@@ -177,8 +177,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # compute output
         output = model(input_var)
-        import pdb
-        pdb.set_trace()
         loss = criterion(output, target_var)
 
         # compute gradient and do SGD step

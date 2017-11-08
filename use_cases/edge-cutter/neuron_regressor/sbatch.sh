@@ -3,7 +3,7 @@
 #SBATCH --job-name=myPythonJobGPU
 #SBATCH --nodes=1
 #SBATCH --time=20:00:00
-#SBATCH --mem=50GB
+#SBATCH --mem=90GB
 #SBATCH --gres=gpu:2
 #SBATCH --mail-type=END
 #SBATCH --mail-user=ps3336@nyu.edu
@@ -22,5 +22,5 @@ DATADIR=$SCRATCH/my_project/data
 
 cd $RUNDIR
 
-python main.py
+python loader_main.py --lr 0.01
 
