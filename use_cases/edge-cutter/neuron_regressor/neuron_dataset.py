@@ -122,8 +122,8 @@ class NeuronDataset(Dataset):
         cropped_image, center_i, center_j = random_crop(image)
 
         box = self.label[idx]
-        bool_i = [np.abs(center_i-co[0]) < 30 for co in box]
-        bool_j = [np.abs(center_j-co[1]) < 30 for co in box]
+        bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
+        bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
         count = float(sum(bool_i and bool_j))
 
         if self.transform:
@@ -140,14 +140,14 @@ class NeuronDataset(Dataset):
          cnt_3 = 64*0.2
          switch = True
          while True:
-             cropped_image, count = getitem(idx)
-             if cnt_0 != 0 and count = 0:
+             cropped_image, count = self.getitem(idx)
+             if cnt_0 != 0 and count == 0:
                  cnt_0 -= 1
                  return cropped_image, count
-             elif cnt_1 != 0 and count = 1:
+             elif cnt_1 != 0 and count == 1:
                  cnt_1 -= 1
                  return cropped_image, count
-             elif cnt_2 != 0 and count = 2:
+             elif cnt_2 != 0 and count == 2:
                  cnt_2 -= 1
                  return cropped_image, count
              elif cnt_3 != 0 and count >= 3:
