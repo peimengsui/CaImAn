@@ -140,7 +140,8 @@ class NeuronDataset(Dataset):
 			box = self.label[idx]
 		
 			if len(box) == 0:
-				idx = 10
+				idx = np.random.randint(0, 5000)
+
 				continue 
 			bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
 			bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
@@ -238,7 +239,7 @@ class NeuronDataset(Dataset):
 				idx_n = next(x[0] for x in enumerate(crop_neual_cnt_list) if x[1] > n-1)
 				crop_n = crop_list[idx_n]
 				im = Image.fromarray(crop_n.astype('uint8'))
-				im.save('temp.png')
+				#im.save('temp.png')
 				if n == 2:
 					self.cnt_2 -= 1
 				else:
