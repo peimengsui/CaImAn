@@ -107,8 +107,8 @@ def main():
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
-    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=1)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     if torch.cuda.is_available():
         criterion = nn.MSELoss().cuda()
     else:

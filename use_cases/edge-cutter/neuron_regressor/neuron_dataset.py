@@ -121,28 +121,37 @@ class NeuronDataset(Dataset):
 		self.cnt_1 = int(64*0.4)
 		self.cnt_2 = int(64*0.2)
 		self.cnt_3 = 64 - self.cnt_0 - self.cnt_1 - self.cnt_2
-
-
+		self.total_return = 0
+		
 	def __len__(self):
 		return len(self.label)
 
 	def getcrop(self, idx):
-
-		image = Image.open(os.path.join(self.image_dir, '{}.png'.format(idx)))
 		
-		random_crop = RandomCrop(size = 64)
-		cropped_image, center_i, center_j = random_crop(image)
+		while True:
+			image = Image.open(os.path.join(self.image_dir, '{}.png'.format(idx)))
+		
+			img_arr = np.array(image)
+		
 
-		box = self.label[int(idx/10)]
-		bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
-		bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
-		count = float(sum(bool_i and bool_j))
+			random_crop = RandomCrop(size = 64)
+			cropped_image, center_i, center_j = random_crop(image)
+
+			box = self.label[idx]
+		
+			if len(box) == 0:
+				idx = 10
+				continue 
+			bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
+			bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
+			count = float(sum(bool_i and bool_j))
+		
 
 
-		if self.transform:
-			cropped_image = self.transform(cropped_image)
+			if self.transform:
+				cropped_image = self.transform(cropped_image)
 
-		return cropped_image, count
+			return cropped_image, count
 
 	def __getitem__(self, idx):
 		
@@ -151,10 +160,18 @@ class NeuronDataset(Dataset):
 		@output: 10 crop images and corresponding count neurons
 		'''
 
-		cropped_image, count = self.getcrop(idx)
-		
+		#cropped_image, count = self.getcrop(idx)
+		#print('count={}'.format(count))	
+		#import pdb
+		#pdb.set_trace()	
 		while True:      
-
+			cropped_image, count = self.getcrop(idx)
+			#print('count={}'.format(count))
+			#print('cnt_0={}'.format(self.cnt_0))
+			#print('cnt_1={}'.format(self.cnt_1))
+			#print('cnt_2={}'.format(self.cnt_2))
+			#print('cnt_3={}'.format(self.cnt_3))
+			#print(self.total_return)	
 			if self.cnt_0 ==0 and self.cnt_1 ==0 and self.cnt_2 ==0 and self.cnt_3 ==0:
 				self.cnt_0 = int(64*0.2)
 				self.cnt_1 = int(64*0.4)
@@ -165,84 +182,77 @@ class NeuronDataset(Dataset):
 			if self.cnt_0 ==0 and self.cnt_1 == 0:
 				if self.cnt_2 > 0:
 					cropped_image, count = self.get_cnt_2_3(n=2)
-					self.cnt_2 -= 1
+					#self.cnt_2 -= 1
+					self.total_return += 1
 					return cropped_image, count
 				else:
 					cropped_image, count = self.get_cnt_2_3(n=3)
-					self.cnt_3 -= 1
+					#self.cnt_3 -= 1
+					self.total_return += 1
 					return cropped_image, count
 	
 			if count == 0:
 				if self.cnt_0 > 0:
 					self.cnt_0 -= 1
+					self.total_return += 1
 					return cropped_image, count
 
 			elif count == 1:
 				if self.cnt_1 > 0:
 					self.cnt_1 -= 1
+					self.total_return += 1
 					return cropped_image, count
 
 			elif count == 2:
 				if self.cnt_2 > 0:
 					self.cnt_2 -= 1
+					self.total_return += 1
 					return cropped_image, count
 
 			elif count > 2:
 				if self.cnt_3 > 0:
 					self.cnt_3 -= 1
+					self.total_return += 1
 					return cropped_image, count
 
 			else:
 				pass
 
 
-		image = Image.open(os.path.join(self.image_dir, '{}.png'.format(idx)))
-		
-		random_crop = RandomCrop(size = 64)
-		cropped_image, center_i, center_j = random_crop(image)
-
-		box = self.label[int(idx/10)]
 
 
 	def get_cnt_2_3(self, n = 2):
 
 		while True:
 
-			random_idx = np.random.randint(0, self.__len__)
+			random_idx = np.random.randint(0, self.__len__())
 			image = Image.open(os.path.join(self.image_dir, '{}.png'.format(random_idx)))
 			image_arr = np.array(image)
 			loc = self.label[random_idx]
 
-			crop_list,crop_neual_cnt_list = self.crop_count_neural(image_arr, loc, 64)
-
-			if max(crop_neual_cnt_list) >= n:
+			crop_list,crop_neual_cnt_list = self.crop_count_neural(image_arr, loc, 63)
+			#print(max(crop_neual_cnt_list))
+			if len(crop_neual_cnt_list)>0 and max(crop_neual_cnt_list) >= n:
 			
-				idx_n = crop_neual_cnt_list.index(n)
+				#idx_n = crop_neual_cnt_list.index(n)
+				idx_n = next(x[0] for x in enumerate(crop_neual_cnt_list) if x[1] > n-1)
 				crop_n = crop_list[idx_n]
+				im = Image.fromarray(crop_n.astype('uint8'))
+				im.save('temp.png')
 				if n == 2:
 					self.cnt_2 -= 1
 				else:
 					self.cnt_3 -= 1
-				return Image.fromarray(crop_n), n
-
+				return self.transform(Image.fromarray(crop_n.astype('uint8'))), crop_neual_cnt_list[idx_n]
+				#return Image.open('temp.png'), crop_neual_cnt_list[idx_n]
 			else:
 				continue
 
 
 
 	def crop_count_neural(self, image_frame, bbox_center_location, crop_size):
-	'''
-	@input: 
-		image_frame: list of 2-d arrary
-		bbox_center_location: list of list with bounding box center position
-		crop_size: user initialized, depends on image frame size. 
-					e.g.: if we want a size of 5*5 crop, to set up crop_size = 4
-	@output:
-		crop_list: list of 2d array, each 2d array represent a crop
-		crop_neual_cnt_list: list of interges, each int represent the number of neurals in corresponding crop
-	
-	'''
-	
+
+
 		def find_bounding_loc(center_index, crop_size = crop_size, image_frame = image_frame):
 			'''
 			@input: center_index, list of location
