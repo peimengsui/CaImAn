@@ -6,6 +6,8 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import numbers
 import random 
+from skimage import io
+
 def pad(img, padding, fill=0):
     """Pad the given PIL Image on all sides with the given "pad" value.
     Args:
@@ -110,60 +112,103 @@ class NeuronDataset(Dataset):
                 on a sample.
         """
         self.label = pickle.load(open(label_file, "rb"))
-        self.frame = np.load(frame_file)['arr_0']
         self.transform = transform
 
     def __len__(self):
-        return len(self.label)
+        return len(self.label)*10
 
-    def getitem(self, idx):
-        image = Image.fromarray(self.frame[idx,:,:], 'L')
-        random_crop = RandomCrop(size = 64)
-        cropped_image, center_i, center_j = random_crop(image)
+    def getcrop(self, idx):
+        cropped_image_list = []
+        count_list = []
+        image = io.imread('{}.png'.format(idx/10))
+        for i in range(150):
+            random_crop = RandomCrop(size = 64)
+            cropped_image, center_i, center_j = random_crop(image)
 
-        box = self.label[idx]
-        bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
-        bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
-        count = float(sum(bool_i and bool_j))
+            box = self.label[idx/10]
+            bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
+            bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
+            count = float(sum(bool_i and bool_j))
+            cropped_image_list.append(cropped_image)
+            count_list.append(count)
 
         if self.transform:
             cropped_image = self.transform(cropped_image)
 
-        return cropped_image, count
+        return cropped_image_list, count_list
 
-     
+    def getitem(self, idx):
+        
+        '''
+        @input: list of cropped_image and list of count
+        @output: 10 crop images and corresponding count neurons
+        '''
+        
+        # upsample distribution
+        cnt_0 = 2 
+        cnt_1 = 4
+        cnt_2 = 2
+        cnt_3 = 2
+        
+        # to choose 10 crops sample
+        cropped_image = []
+        count = []
+
+        # 150 crops 
+        cropped_image_list, count_list = self.getcrop(idx)
+        indices = [i for i,x in enumerate(count_list) if x >= 3]
+        if len(indices) >= 2: 
+            # more than two count greater than 3
+            cropped_image.append(cropped_image_list[indices[0]])
+            cropped_image.append(cropped_image_list[indices[1]])
+            count.append(count_list[indices[0]])
+            count.append(count_list[indices[1]])
+            cnt_3 = 0 
+        elif len(indices) == 1: 
+            # only one count greater than 3
+            # append twice
+            cropped_image.append(cropped_image_list[indices[0]])
+            cropped_image.append(cropped_image_list[indices[0]])
+            count.append(count_list[indices[0]])
+            count.append(count_list[indices[0]])
+            cnt_3 = 0
+        else:
+            # if no count greater than 3
+            # to use cnt_2 crop 
+            cnt_2 = 4
+        
+        counter = 0 
+        while True:        
+            index = randint(0, len(cropped_image_list))
+            
+            if cnt_0 != 0 and count_list[index] == 0:
+                cnt_0 -= 1
+                cropped_image.append(cropped_image_list[index])
+                count.append(count_list[index])
+                
+            elif cnt_1 != 0 and count_list[index] == 1:
+                cnt_1 -= 1
+                cropped_image.append(cropped_image_list[index])
+                count.append(count_list[index])
+                
+            elif cnt_2 != 0 and count_list[index] == 2:
+                cnt_2 -= 1
+                cropped_image.append(cropped_image_list[index])
+                count.append(count_list[index])
+            
+            elif cnt_0 == 0 and cnt_1 == 0 and cnt_2 == 0 and cnt_3 == 0:
+                return cropped_image, count
+            else:
+                if counter > 300:
+                    for i in range(10-len(cropped_image)):
+                        cropped_image += [cropped_image_list[index]]
+                        count += [count_list[index]]
+                    return cropped_image, count
+                    break
+                else:
+                    continue
+
     def __getitem__(self, idx):
-    
-         cnt_0 = 64*0.2 #17
-         cnt_1 = 64*0.4
-         cnt_2 = 64*0.2
-         cnt_3 = 64*0.2
-         switch = True
-         while True:
-             cropped_image, count = self.getitem(idx)
-             if cnt_0 != 0 and count == 0:
-                 cnt_0 -= 1
-                 return cropped_image, count
-             elif cnt_1 != 0 and count == 1:
-                 cnt_1 -= 1
-                 return cropped_image, count
-             elif cnt_2 != 0 and count == 2:
-                 cnt_2 -= 1
-                 return cropped_image, count
-             elif cnt_3 != 0 and count >= 3:
-                 cnt_3 -= 1
-                 return cropped_image, count
-             elif cnt_0 == 0 and cnt_1 == 0 and cnt_2 == 0 and cnt_3 == 0:
-                 cnt_0 = 64*0.2 
-                 cnt_1 = 64*0.4
-                 cnt_2 = 64*0.2
-                 cnt_3 = 64*0.2
-             else:
-                 continue
-
-
-
-
-
-     
-
+        cropped_image, count = self.getitem(idx)
+        index = randint(0, len(cropped_image))
+        return cropped_image[index], count[index]
