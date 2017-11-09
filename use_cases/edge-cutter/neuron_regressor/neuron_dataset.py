@@ -116,7 +116,7 @@ class NeuronDataset(Dataset):
     def __len__(self):
         return len(self.label)
 
-    def __getitem__(self, idx):
+    def getitem(self, idx):
         image = Image.fromarray(self.frame[idx,:,:], 'L')
         random_crop = RandomCrop(size = 64)
         cropped_image, center_i, center_j = random_crop(image)
@@ -130,3 +130,40 @@ class NeuronDataset(Dataset):
             cropped_image = self.transform(cropped_image)
 
         return cropped_image, count
+
+     
+    def __getitem__(self, idx):
+    
+         cnt_0 = 64*0.2 #17
+         cnt_1 = 64*0.4
+         cnt_2 = 64*0.2
+         cnt_3 = 64*0.2
+         switch = True
+         while True:
+             cropped_image, count = getitem(idx)
+             if cnt_0 != 0 and count = 0:
+                 cnt_0 -= 1
+                 return cropped_image, count
+             elif cnt_1 != 0 and count = 1:
+                 cnt_1 -= 1
+                 return cropped_image, count
+             elif cnt_2 != 0 and count = 2:
+                 cnt_2 -= 1
+                 return cropped_image, count
+             elif cnt_3 != 0 and count >= 3:
+                 cnt_3 -= 1
+                 return cropped_image, count
+             elif cnt_0 == 0 and cnt_1 == 0 and cnt_2 == 0 and cnt_3 == 0:
+                 cnt_0 = 64*0.2 
+                 cnt_1 = 64*0.4
+                 cnt_2 = 64*0.2
+                 cnt_3 = 64*0.2
+             else:
+                 continue
+
+
+
+
+
+     
+
