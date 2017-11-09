@@ -98,17 +98,17 @@ def main():
 
     # define loss function (criterion) and pptimizer
     train_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl',
-                                           frame_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/train_images',
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
     valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl',
-                                           frame_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
+    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=1)
     if torch.cuda.is_available():
         criterion = nn.MSELoss().cuda()
     else:

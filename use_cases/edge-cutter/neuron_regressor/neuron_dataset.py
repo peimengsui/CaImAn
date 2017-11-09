@@ -7,6 +7,7 @@ from torchvision import transforms
 import numbers
 import random 
 from skimage import io
+import os
 
 def pad(img, padding, fill=0):
     """Pad the given PIL Image on all sides with the given "pad" value.
@@ -103,7 +104,7 @@ class RandomCrop(object):
 class NeuronDataset(Dataset):
     """Neuron dataset."""
 
-    def __init__(self, label_file, frame_file, transform=None):
+    def __init__(self, label_file, image_dir, transform=None):
         """
         Args:
             label_file (string): Path to the label file.
@@ -113,6 +114,7 @@ class NeuronDataset(Dataset):
         """
         self.label = pickle.load(open(label_file, "rb"))
         self.transform = transform
+        self.image_dir = image_dir
 
     def __len__(self):
         return len(self.label)*10
@@ -120,12 +122,12 @@ class NeuronDataset(Dataset):
     def getcrop(self, idx):
         cropped_image_list = []
         count_list = []
-        image = io.imread('{}.png'.format(idx/10))
-        for i in range(150):
+        image = Image.open(os.path.join(self.image_dir, '{}.png'.format(int(idx/10))))
+        for i in range(0, 150):
             random_crop = RandomCrop(size = 64)
             cropped_image, center_i, center_j = random_crop(image)
 
-            box = self.label[idx/10]
+            box = self.label[int(idx/10)]
             bool_i = [np.abs(center_i-co[0]) < 32 for co in box]
             bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
             count = float(sum(bool_i and bool_j))
@@ -179,8 +181,7 @@ class NeuronDataset(Dataset):
         
         counter = 0 
         while True:        
-            index = randint(0, len(cropped_image_list))
-            
+            index = random.randint(0, len(cropped_image_list))
             if cnt_0 != 0 and count_list[index] == 0:
                 cnt_0 -= 1
                 cropped_image.append(cropped_image_list[index])
@@ -200,7 +201,7 @@ class NeuronDataset(Dataset):
                 return cropped_image, count
             else:
                 if counter > 300:
-                    for i in range(10-len(cropped_image)):
+                    for i in range(0, 10-len(cropped_image)):
                         cropped_image += [cropped_image_list[index]]
                         count += [count_list[index]]
                     return cropped_image, count
@@ -210,5 +211,5 @@ class NeuronDataset(Dataset):
 
     def __getitem__(self, idx):
         cropped_image, count = self.getitem(idx)
-        index = randint(0, len(cropped_image))
+        index = random.randint(0, len(cropped_image))
         return cropped_image[index], count[index]
