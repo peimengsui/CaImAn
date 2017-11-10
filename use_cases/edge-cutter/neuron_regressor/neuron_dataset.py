@@ -163,9 +163,16 @@ class NeuronDataset(Dataset):
 		#cropped_image, count = self.getcrop(idx)
 		#print('count={}'.format(count))	
 		#import pdb
-		#pdb.set_trace()	
-		while True:      
-			cropped_image, count = self.getcrop(idx)
+		#pdb.set_trace()
+		iteration = 0	
+		while True:  
+			if iteration < 300:    
+				cropped_image, count = self.getcrop(idx)
+			else:
+				cropped_image, count = self.getcrop(np.random.randint(0,self.__len__()))
+				if count = 0:
+					continue
+			iteration += 1
 			#print('count={}'.format(count))
 			#print('cnt_0={}'.format(self.cnt_0))
 			#print('cnt_1={}'.format(self.cnt_1))
