@@ -9,6 +9,10 @@ import random
 from skimage import io
 import os
 
+def random_rotate(img, degree = [0, 90, 180, 270]):
+	random_degree = np.ramdom.choice(degree, 1)
+	return img.rotate(random_degree)
+
 def pad(img, padding, fill=0):
 	"""Pad the given PIL Image on all sides with the given "pad" value.
 	Args:
@@ -160,23 +164,13 @@ class NeuronDataset(Dataset):
 		@input: list of cropped_image and list of count
 		@output: 10 crop images and corresponding count neurons
 		'''
-		#cropped_image, count = self.getcrop(idx)
-		#print('count={}'.format(count))	
-		#import pdb
-		#pdb.set_trace()
 		iteration = 0	
 		while True:  
 			if iteration < 300:    
 				cropped_image, count = self.getcrop(idx)
 			else:
 				cropped_image, count = self.getcrop(np.random.randint(0,self.__len__()))
-			iteration += 1
-			#print('count={}'.format(count))
-			#print('cnt_0={}'.format(self.cnt_0))
-			#print('cnt_1={}'.format(self.cnt_1))
-			#print('cnt_2={}'.format(self.cnt_2))
-			#print('cnt_3={}'.format(self.cnt_3))
-			#print(self.total_return)	
+			iteration += 1	
 			if self.cnt_0 ==0 and self.cnt_1 ==0 and self.cnt_2 ==0 and self.cnt_3 ==0:
 				self.cnt_0 = int(64*0.2)
 				self.cnt_1 = int(64*0.4)
@@ -189,35 +183,41 @@ class NeuronDataset(Dataset):
 					cropped_image, count = self.get_cnt_2_3(n=2)
 					#self.cnt_2 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 				else:
 					cropped_image, count = self.get_cnt_2_3(n=3)
 					#self.cnt_3 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 	
 			if count == 0:
 				if self.cnt_0 > 0:
 					self.cnt_0 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 
 			elif count == 1:
 				if self.cnt_1 > 0:
 					self.cnt_1 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 
 			elif count == 2:
 				if self.cnt_2 > 0:
 					self.cnt_2 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 
 			elif count > 2:
 				if self.cnt_3 > 0:
 					self.cnt_3 -= 1
 					self.total_return += 1
+					cropped_image = random_rotate(cropped_image)
 					return cropped_image, count
 
 			else:
