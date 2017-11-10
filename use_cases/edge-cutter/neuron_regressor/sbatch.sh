@@ -14,5 +14,5 @@ RUNDIR=/mnt/home/speimeng/dev/CaImAn/use_cases/edge-cutter/neuron_regressor
 
 cd $RUNDIR
 
-python loader_main.py --lr 0.03
+python main.py --lr 0.03
 

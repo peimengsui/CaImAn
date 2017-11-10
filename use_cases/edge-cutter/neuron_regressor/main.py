@@ -13,8 +13,10 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import vgg
+from torch.utils.data import Dataset, DataLoader
+from neuron_dataset import NeuronDataset
 
-from data_loader import *
+#from data_loader import *
 
 model_names = sorted(name for name in vgg.__dict__
     if name.islower() and not name.startswith("__")
@@ -33,8 +35,8 @@ parser.add_argument('--epochs', default=300, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=128, type=int,
-                    metavar='N', help='mini-batch size (default: 128)')
+parser.add_argument('-b', '--batch-size', default=64, type=int,
+                    metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', '--learning-rate', default=0.05, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -65,38 +67,8 @@ def main():
     valid_losses = []
     global args
     args = parser.parse_args()
-    train_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..npz')
-    train_image = train_image['arr_0']
-
-    train_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl', 'rb')) 
-
-    no_neuron_image = np.load('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
-    no_neuron_image = no_neuron_image['arr_0']
-
-    no_neuron_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb'))
-
-    test_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
-    test_image = test_image['arr_0']
-    test_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb')) 
-    '''
-    train_image = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/train_image.pkl', 'rb')) 
-
-    train_locations = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/train_locations_sample.pkl', 'rb')) 
-
-    test_image = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/test_image_sample.pkl', 'rb')) 
-
-    test_locations = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/test_locations_sample.pkl', 'rb')) 
-
-    no_neuron_image = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/no_neuron_image_sample.pkl', 'rb')) 
-
-    no_neuron_locations = pickle.load(open(\
-        '/mnt/ceph/neuro/edge_cutter/generated_input_data_sample/no_locations_sample.pkl', 'rb')) 
-    '''
+    
+    
 
     # Check the save_dir exists or not
     if not os.path.exists(args.save_dir):
@@ -123,34 +95,20 @@ def main():
 
     cudnn.benchmark = True
 
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                  std=[0.229, 0.224, 0.225])
-
-    # train_loader = torch.utils.data.DataLoader(
-    #     datasets.CIFAR10(root='./data', train=True, transform=transforms.Compose([
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.RandomCrop(32, 4),
-    #         transforms.ToTensor(),
-    #         normalize,
-    #     ]), download=True),
-    #     batch_size=args.batch_size, shuffle=True,
-    #     num_workers=args.workers, pin_memory=True)
-
-    # val_loader = torch.utils.data.DataLoader(
-    #     datasets.CIFAR10(root='./data', train=False, transform=transforms.Compose([
-    #         transforms.ToTensor(),
-    #         normalize,
-    #     ])),
-    #     batch_size=args.batch_size, shuffle=False,
-    #     num_workers=args.workers, pin_memory=True)
 
     # define loss function (criterion) and pptimizer
-
-    train_loader = data_generator(train_image, train_locations, no_neuron_image, no_neuron_locations, batch_size=128, train=True)
-
-    val_loader = data_generator(test_image, test_locations, no_neuron_image, no_neuron_locations, batch_size=128, train=False)
-
-
+    train_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/train_images/all_labels_train.pkl',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/train_images',
+                                           transform=transforms.Compose([
+                                               transforms.ToTensor()
+                                           ]))
+    valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
+                                           transform=transforms.Compose([
+                                               transforms.ToTensor()
+                                           ]))
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     if torch.cuda.is_available():
         criterion = nn.MSELoss().cuda()
     else:
@@ -202,11 +160,11 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
 
     end = time.time()
-    n_train = 0
+    
     #for i, (input, target) in enumerate(train_loader):
-    for i, (input, target) in train_loader:
-
+    for i, (input, target) in enumerate(train_loader):
         # measure data loading time
+        target = target.float()
         data_time.update(time.time() - end)
         if torch.cuda.is_available():
             target = target.cuda(async=True)
@@ -238,18 +196,15 @@ def train(train_loader, model, criterion, optimizer, epoch):
         end = time.time()
         
        
-        if n_train % args.print_freq == 0:
+        if i % args.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
-                      epoch, n_train, args.batch_size*args.num_batchs_of_1_epoch, batch_time=batch_time,
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
+                      epoch, i, len(train_loader), batch_time=batch_time,
                       data_time=data_time, loss=losses))
-
-        n_train += 1
-        if n_train > args.num_batchs_of_1_epoch:
-            break
-        return losses.avg
+        
+    return losses.avg
 
 def validate(val_loader, model, criterion):
     """
@@ -264,9 +219,9 @@ def validate(val_loader, model, criterion):
 
     end = time.time()
 
-    n_val = 0
     #for i, (input, target) in enumerate(val_loader):
-    for i, (input, target) in val_loader:
+    for i, (input, target) in enumerate(val_loader):
+        target = target.float()
         if torch.cuda.is_available():
             target = target.cuda(async=True)
         input_var = torch.autograd.Variable(input, volatile=True)
@@ -293,14 +248,11 @@ def validate(val_loader, model, criterion):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if n_val % args.print_freq == 0:
+        if i % args.print_freq == 0:
             print('Test: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
-                      n_val, args.batch_size*args.valid_num_batchs_of_1_epoch, batch_time=batch_time, loss=losses))
-        n_val += 1
-        if n_val > args.valid_num_batchs_of_1_epoch:
-            break
+                      i, len(val_loader), batch_time=batch_time, loss=losses))
 
     print(' * MSE {losses.avg:.3f}'
           .format(losses=losses))
