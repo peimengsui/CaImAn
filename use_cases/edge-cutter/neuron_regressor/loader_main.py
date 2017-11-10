@@ -97,12 +97,12 @@ def main():
 
 
     # define loss function (criterion) and pptimizer
-    train_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_..pkl',
+    train_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/train_images/all_labels_train.pkl',
                                            image_dir='/mnt/ceph/neuro/edge_cutter/train_images',
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl',
+    valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
                                            image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
@@ -164,6 +164,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
     #for i, (input, target) in enumerate(train_loader):
     for i, (input, target) in enumerate(train_loader):
         # measure data loading time
+        import pdb 
+        pdb.set_trace()
         target = target.float()
         data_time.update(time.time() - end)
         if torch.cuda.is_available():

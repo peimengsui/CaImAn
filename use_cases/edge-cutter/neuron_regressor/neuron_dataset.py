@@ -160,7 +160,6 @@ class NeuronDataset(Dataset):
 		@input: list of cropped_image and list of count
 		@output: 10 crop images and corresponding count neurons
 		'''
-
 		#cropped_image, count = self.getcrop(idx)
 		#print('count={}'.format(count))	
 		#import pdb
