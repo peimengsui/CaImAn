@@ -4,21 +4,20 @@ import vgg
 import numpy as np
 from data_loader import *
 import pandas as pd
+from neuron_dataset import NeuronDataset
+from torch.utils.data import Dataset, DataLoader
 
-model_dict = torch.load('save_temp/checkpoint_63.tar')['state_dict']
+model_dict = torch.load('save_temp/checkpoint_19.tar')['state_dict']
 regressor = vgg.__dict__['vgg11_bn']()
 regressor.load_state_dict(model_dict)
 regressor = regressor.cpu()
-no_neuron_image = np.load('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
-no_neuron_image = no_neuron_image['arr_0']
 
-no_neuron_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_zero_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb'))
-
-test_image  = np.load('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.npz')
-test_image = test_image['arr_0']
-test_locations = pickle.load(open('/mnt/ceph/neuro/edge_cutter/25_input_data/Yr_d1_512_d2_512_d3_1_order_C_frames_8000_.test.pkl', 'rb')) 
-
-test_loader = data_generator(test_image, test_locations, no_neuron_image, no_neuron_locations, batch_size=128, train=False)
+test_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
+                                           transform=transforms.Compose([
+                                               transforms.ToTensor()
+                                           ]))
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
 def predict(test_loader, model):
     """

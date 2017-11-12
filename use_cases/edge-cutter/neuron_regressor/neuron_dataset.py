@@ -10,7 +10,7 @@ from skimage import io
 import os
 
 def random_rotate(img, degree = [0, 90, 180, 270]):
-	random_degree = np.ramdom.choice(degree, 1)
+	random_degree = np.random.choice(degree, 1)
 	return img.rotate(random_degree)
 
 def pad(img, padding, fill=0):
@@ -151,11 +151,6 @@ class NeuronDataset(Dataset):
 			bool_j = [np.abs(center_j-co[1]) < 32 for co in box]
 			count = float(sum(bool_i and bool_j))
 		
-
-
-			if self.transform:
-				cropped_image = self.transform(cropped_image)
-
 			return cropped_image, count
 
 	def __getitem__(self, idx):
@@ -184,12 +179,16 @@ class NeuronDataset(Dataset):
 					#self.cnt_2 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 				else:
 					cropped_image, count = self.get_cnt_2_3(n=3)
 					#self.cnt_3 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 	
 			if count == 0:
@@ -197,6 +196,8 @@ class NeuronDataset(Dataset):
 					self.cnt_0 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 
 			elif count == 1:
@@ -204,6 +205,8 @@ class NeuronDataset(Dataset):
 					self.cnt_1 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 
 			elif count == 2:
@@ -211,6 +214,8 @@ class NeuronDataset(Dataset):
 					self.cnt_2 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 
 			elif count > 2:
@@ -218,6 +223,8 @@ class NeuronDataset(Dataset):
 					self.cnt_3 -= 1
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
+					if self.transform:
+						cropped_image = self.transform(cropped_image)
 					return cropped_image, count
 
 			else:
@@ -248,7 +255,7 @@ class NeuronDataset(Dataset):
 					self.cnt_2 -= 1
 				else:
 					self.cnt_3 -= 1
-				return self.transform(Image.fromarray(crop_n.astype('uint8'))), crop_neual_cnt_list[idx_n]
+				return Image.fromarray(crop_n.astype('uint8')), crop_neual_cnt_list[idx_n]
 				#return Image.open('temp.png'), crop_neual_cnt_list[idx_n]
 			else:
 				continue

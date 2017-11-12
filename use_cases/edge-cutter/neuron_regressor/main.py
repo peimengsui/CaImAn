@@ -78,8 +78,10 @@ def main():
     #if torch.cuda.is_available():
     #    model.features = torch.nn.DataParallel(model.features)
     if torch.cuda.is_available():
+        print('Use GPU')
         model.cuda()
-
+    else:
+        print('Use CPU')
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):

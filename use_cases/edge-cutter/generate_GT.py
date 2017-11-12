@@ -20,8 +20,15 @@ parser.add_argument('--file-index', type=int, default=0, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/zero_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/50_input_data',
                     help='directory to save output file')
+
+parser.add_argument('--random-choice', type=int, default= 0.6,
+                    help='how much percentage neuron take out from train data')
+parser.add_argument('--exceptionality-thred', type=int, default=-50,
+                    help='threshold for counting activated neuron')
+
+
 args = parser.parse_args()
 np.random.seed(args.seed)
 #%% file name
@@ -85,7 +92,8 @@ Y = np.reshape(Yr, dims + (T,), order='F')
 m_orig  = cm.movie(images)
 #%%
 
-train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]*0.6), replace=False)
+# take args.random_choice percentage neuron out from train data
+train = np.random.choice(A_gt_thr.shape[1], int(A_gt_thr.shape[1]* args.random_choice), replace=False)
 test = np.setdiff1d(np.arange(A_gt.shape[-1]), train)
 
 #-------------------------------------train-----------------------------------
@@ -107,6 +115,7 @@ tr_tmp = np.pad(traces_gt.T,((padbefore,padafter),(0,0)),mode='reflect')
 numFramesNew,num_traces = np.shape(tr_tmp)    
 #% compute baseline quickly
 print("binning data ..."); 
+
 tr_BL=np.reshape(tr_tmp,(downsampfact,int(numFramesNew/downsampfact),num_traces),order='F');
 tr_BL=np.percentile(tr_BL,8,axis=0)            
 print("interpolating data ..."); 
@@ -117,7 +126,6 @@ if padafter==0:
 else:
     traces_gt -= tr_BL[padbefore:-padafter].T
 
-
 #traces_gt = scipy.signal.savgol_filter(traces_gt,5,2)          
 #%%
 fitness,exceptionality,sd_r,md = cm.components_evaluation.compute_event_exceptionality(traces_gt[idx_exclude],robust_std=False,N=5,use_mode_fast=False)
@@ -126,7 +134,7 @@ m_res = m_orig - cm.movie(np.reshape(A_gt.tocsc()[:,idx_comps].dot(C_gt[idx_comp
 #%%
 max_mov = m_res.max() 
 #%%
-m_res.play()
+#m_res.play()
 #%%
 count_start = 10
 #bin_ = 10
@@ -137,17 +145,17 @@ cms_list = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
-    active = np.where(exceptionality[:,count]<-20)[0]
+    active = np.where(exceptionality[:,count]< args.exceptionality_thred)[0]
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
     img_frame_list.append(img_temp)
     cms_list.append(cms)
-    for cm__ in cms:
-        cm_=cm__[::]
-        img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
-    cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
-    cv2.waitKey(100)
+    #for cm__ in cms:
+    #    cm_=cm__[::]
+    #    img_temp = cv2.rectangle(img_temp,(cm_[1]-gSig[0], cm_[0]-gSig[0]),(cm_[1]+gSig[0], cm_[0]+gSig[0]),1)
+    #cv2.imshow('frame', cv2.resize(img_temp*2,(dims[1]*2,dims[0]*2)))
+    #cv2.waitKey(100)
 
 
 #%%
@@ -207,7 +215,7 @@ cms_list = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
-    active = np.where(exceptionality[:,count]<-20)[0]
+    active = np.where(exceptionality[:,count]<args.exceptionality_thred)[0]
     print(active)
     # cms: a list of positions of bounding box
     cms = [np.array(scipy.ndimage.center_of_mass(np.reshape(a.toarray(),dims,order = 'F'))).astype(np.int) for a in  A_gt.tocsc()[:,idx_exclude[active]].T]
@@ -221,12 +229,11 @@ for count in range(count_start,T):
 
 
 #%%
-save_path = os.path.join(args.save_dir, filename+'test.npz')
+save_path = os.path.join(args.save_dir, filename +'test.npz')
 np.savez(save_path, img_frame_list)
 #%%
-save_path_pos = os.path.join(args.save_dir, filename+'test.pkl')
+save_path_pos = os.path.join(args.save_dir, filename +'test.pkl')
 position = open(save_path_pos, 'wb')
 pickle.dump(cms_list, position)
 position.close()
-
 
