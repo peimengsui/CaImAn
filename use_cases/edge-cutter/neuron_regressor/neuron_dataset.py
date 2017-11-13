@@ -180,7 +180,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 
-					save_crops(self.image_dir, cropped_image, 2, self.total_return)
+					self.save_crops(self.image_dir, cropped_image, 2, self.total_return)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -191,7 +191,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 
-					save_crops(self.image_dir, cropped_image, 3, self.total_return, count_=count)
+					self.save_crops(self.image_dir, cropped_image, 3, self.total_return, count_=count)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -203,7 +203,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 					
-					save_crops(self.image_dir, cropped_image, 0, self.total_return)
+					self.save_crops(self.image_dir, cropped_image, 0, self.total_return)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -215,7 +215,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 					
-					save_crops(self.image_dir, cropped_image, 1, self.total_return)
+					self.save_crops(self.image_dir, cropped_image, 1, self.total_return)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -227,7 +227,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 
-					save_crops(self.image_dir, cropped_image, 2, self.total_return)
+					self.save_crops(self.image_dir, cropped_image, 2, self.total_return)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -239,7 +239,7 @@ class NeuronDataset(Dataset):
 					self.total_return += 1
 					cropped_image = random_rotate(cropped_image)
 
-					save_crops(self.image_dir, cropped_image, 3, self.total_return, count_= count)
+					self.save_crops(self.image_dir, cropped_image, 3, self.total_return, count_= count)
 
 					if self.transform:
 						cropped_image = self.transform(cropped_image)
@@ -249,17 +249,17 @@ class NeuronDataset(Dataset):
 				pass
 
 
-	def save_crops(image_dir, im, n, total_return, count_=0):
+	def save_crops(self, image_dir, im, n, total_return, count_=0):
 
 		if n == 3:
-			if image_dir.contains('train'):
+			if 'train' in image_dir:
 				im.save('/mnt/ceph/neuro/edge_cutter/train_crops/cnt_{}/{}_{}.png'.format(n, total_return, count_))
 			else:
 				im.save('/mnt/ceph/neuro/edge_cutter/test_crops/cnt_{}/{}_{}.png'.format(n, total_return, count_))
 
 		else:
 
-			if image_dir.contains('train'):
+			if 'train' in image_dir:
 				im.save('/mnt/ceph/neuro/edge_cutter/train_crops/cnt_{}/{}.png'.format(n, total_return))
 			else:
 				im.save('/mnt/ceph/neuro/edge_cutter/test_crops/cnt_{}/{}.png'.format(n, total_return))
