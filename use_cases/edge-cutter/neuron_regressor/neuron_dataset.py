@@ -159,18 +159,18 @@ class NeuronDataset(Dataset):
 		@input: list of cropped_image and list of count
 		@output: 10 crop images and corresponding count neurons
 		'''
-		iteration = 0	
+		iteration = 0   
 		while True:  
 			if iteration < 300:    
 				cropped_image, count = self.getcrop(idx)
 			else:
 				cropped_image, count = self.getcrop(np.random.randint(0,self.__len__()))
-			iteration += 1	
+			iteration += 1  
 			if self.cnt_0 ==0 and self.cnt_1 ==0 and self.cnt_2 ==0 and self.cnt_3 ==0:
 				self.cnt_0 = int(64*0.2)
 				self.cnt_1 = int(64*0.4)
 				self.cnt_2 = int(64*0.2)
-				self.cnt_3 = 64 - self.cnt_0 - self.cnt_1 - self.cnt_2	
+				self.cnt_3 = 64 - self.cnt_0 - self.cnt_1 - self.cnt_2  
 
 
 			if self.cnt_0 ==0 and self.cnt_1 == 0:
@@ -373,28 +373,28 @@ class NeuronDataset(Dataset):
 		return (crop_list,crop_neual_cnt_list)
 
 class TestDataset(Dataset):
-    """Face Landmarks dataset."""
+	"""Face Landmarks dataset."""
 
-    def __init__(self, label_file, image_dir, transform=None):
-        """
-        Args:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-        """
-        self.label = pickle.load(open(label_file, "rb"))
-        self.image_dir = image_dir
+	def __init__(self, label_file, image_dir, transform=None):
+		"""
+		Args:
+			csv_file (string): Path to the csv file with annotations.
+			root_dir (string): Directory with all the images.
+			transform (callable, optional): Optional transform to be applied
+				on a sample.
+		"""
+		self.label = pickle.load(open(label_file, "rb"))
+		self.image_dir = image_dir
 
-    def __len__(self):
-        return len(self.label)
+	def __len__(self):
+		return len(self.label)
 
-    def __getitem__(self, idx):
-    	fileindex = idx + 1
-        img_name = os.path.join(self.image_dir, '{}.png'.format(fileindex))
-        image = Image.open(img_name)
-        count = label[str(fileindex)]
-        if self.transform:
-            image = self.transform(image)
+	def __getitem__(self, idx):
+		fileindex = idx + 1
+		img_name = os.path.join(self.image_dir, '{}.png'.format(fileindex))
+		image = Image.open(img_name)
+		count = label[str(fileindex)]
+		if self.transform:
+			image = self.transform(image)
 
-        return image, count
+		return image, count
