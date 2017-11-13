@@ -250,15 +250,14 @@ class NeuronDataset(Dataset):
 
 
 	def save_crops(image_dir, im, n, total_return, count_=0):
-   #def save_crops(self.image_dir, cropped_image, 0, self.total_return)
 
-   		if n == 3:
+		if n == 3:
 			if image_dir.contains('train'):
 				im.save('/mnt/ceph/neuro/edge_cutter/train_crops/cnt_{}/{}_{}.png'.format(n, total_return, count_))
 			else:
 				im.save('/mnt/ceph/neuro/edge_cutter/test_crops/cnt_{}/{}_{}.png'.format(n, total_return, count_))
 
-   		else:
+		else:
 
 			if image_dir.contains('train'):
 				im.save('/mnt/ceph/neuro/edge_cutter/train_crops/cnt_{}/{}.png'.format(n, total_return))
