@@ -14,7 +14,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import vgg
 from torch.utils.data import Dataset, DataLoader
-from neuron_dataset import NeuronDataset
+from neuron_dataset import NeuronDataset, TestDataset
 
 #from data_loader import *
 
@@ -104,8 +104,8 @@ def main():
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))
-    valid_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
-                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
+    valid_dataset = TestDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_crops/valid_label_dic.pkl',
+                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_crops/',
                                            transform=transforms.Compose([
                                                transforms.ToTensor()
                                            ]))

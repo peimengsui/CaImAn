@@ -371,3 +371,30 @@ class NeuronDataset(Dataset):
 		
 		
 		return (crop_list,crop_neual_cnt_list)
+
+class TestDataset(Dataset):
+    """Face Landmarks dataset."""
+
+    def __init__(self, label_file, image_dir, transform=None):
+        """
+        Args:
+            csv_file (string): Path to the csv file with annotations.
+            root_dir (string): Directory with all the images.
+            transform (callable, optional): Optional transform to be applied
+                on a sample.
+        """
+        self.label = pickle.load(open(label_file, "rb"))
+        self.image_dir = image_dir
+
+    def __len__(self):
+        return len(self.label)
+
+    def __getitem__(self, idx):
+    	fileindex = idx + 1
+        img_name = os.path.join(self.image_dir, '{}.png'.format(fileindex))
+        image = Image.open(img_name)
+        count = label[str(fileindex)]
+        if self.transform:
+            image = self.transform(image)
+
+        return image, count
