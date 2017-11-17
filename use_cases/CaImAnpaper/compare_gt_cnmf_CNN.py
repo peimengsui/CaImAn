@@ -52,7 +52,7 @@ from caiman.utils.visualization import plot_contours, view_patches_bar
 from caiman.source_extraction.cnmf import cnmf as cnmf
 from caiman.motion_correction import MotionCorrect
 from caiman.components_evaluation import estimate_components_quality
-
+from caiman.cluster import setup_cluster
 from caiman.components_evaluation import evaluate_components
 
 from caiman.tests.comparison import comparison
@@ -83,8 +83,10 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/neurofinder.03.00.test/images
                  'memory_fact': 1,
                  'n_chunks': 10,
                  'update_background_components': True,# whether to update the background components in the spatial phase
-                 'low_rank_background': True #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
-                                     #(to be used with one background per patch)          
+                 'low_rank_background': True, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
+                                     #(to be used with one background per patch)  
+                 'swap_dim':False,
+                 'crop_pix' : 0,                        
                  }
 #%%
 params_movie = {'fname': '/mnt/ceph/neuro/labeling/neurofinder.04.00.test/images/final_map/Yr_d1_512_d2_512_d3_1_order_C_frames_3000_.mmap',
@@ -111,6 +113,8 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/neurofinder.04.00.test/images
                  'memory_fact': 1,
                  'n_chunks': 10,
                  'update_background_components': True,# whether to update the background components in the spatial phase
+                 'swap_dim':False,
+                 'crop_pix' : 0,
                  'low_rank_background': True #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
                                      #(to be used with one background per patch)          
                  }
@@ -140,7 +144,7 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/neurofinder.02.00/images/fina
                  'memory_fact': 1,
                  'n_chunks': 10,
                  'update_background_components': True,# whether to update the background components in the spatial phase
-                 'low_rank_background': False, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
+                 'low_rank_background': True, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
                                      #(to be used with one background per patch)     
                 'swap_dim':False,
                 'crop_pix':10
@@ -201,7 +205,7 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/yuste.Single_150u/images/fina
                  'memory_fact': 1,
                  'n_chunks': 10,
                  'update_background_components': True,# whether to update the background components in the spatial phase
-                 'low_rank_background': False, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
+                 'low_rank_background': True, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
                                      #(to be used with one background per patch)     
                  'swap_dim':False,
                  'crop_pix':0
@@ -233,7 +237,7 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/neurofinder.00.00/images/fina
                  'memory_fact': 1,
                  'n_chunks': 10,
                  'update_background_components': True,# whether to update the background components in the spatial phase
-                 'low_rank_background': False, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
+                 'low_rank_background': True, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
                                      #(to be used with one background per patch)     
                  'swap_dim':False,
                  'crop_pix':10
@@ -303,7 +307,7 @@ params_movie = {'fname': '/opt/local/Data/labeling/k53_20160530/Yr_d1_512_d2_512
                  }
 
 #%% J115
-params_movie = {'fname': '/mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/images/final_map/Yr_d1_463_d2_472_d3_1_order_C_frames_90000_.mmap',
+params_movie = {'fname': '/opt/local/Data/labeling/J115_2015-12-09_L01_ELS/Yr_d1_463_d2_472_d3_1_order_C_frames_90000_.mmap',
                 'gtname':'/mnt/ceph/neuro/labeling/J115_2015-12-09_L01_ELS/regions/joined_consensus_active_regions.npy',
                  'p': 1,  # order of the autoregressive system
                  'merge_thresh': 0.8,  # merging threshold, max correlation allow
@@ -407,7 +411,7 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/k37_20160109_AM_150um_65mW_zo
                  'merge_thresh': 0.8,  # merging threshold, max correlation allow
                  'rf': 20,  # half-size of the patches in pixels. rf=25, patches are 50x50    20
                  'stride_cnmf': 10,  # amounpl.it of overlap between the patches in pixels
-                 'K': 7,  # number of components per patch
+                 'K': 5,  # number of components per patch
                  'is_dendrites': False,  # if dendritic. In this case you need to set init_method to sparse_nmf
                  'init_method': 'greedy_roi',
                  'gSig': [6,6],  # expected half size of neurons
@@ -422,11 +426,11 @@ params_movie = {'fname': '/mnt/ceph/neuro/labeling/k37_20160109_AM_150um_65mW_zo
                  'fitness_min_full': - 40,
                  'fitness_delta_min_full': - 40,
                  'only_init_patch': True,
-                 'gnb': 1,
+                 'gnb': 2,
                  'memory_fact': 1,
                  'n_chunks': 30,
                  'update_background_components': True,# whether to update the background components in the spatial phase
-                 'low_rank_background': False, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
+                 'low_rank_background': True, #whether to update the using a low rank approximation. In the False case all the nonzero elements of the background components are updated using hals    
                                      #(to be used with one background per patch)     
                  'swap_dim':False,
                  'crop_pix':8,
@@ -493,7 +497,7 @@ params_display = {
 # @params fname name of the movie
 fname_new = params_movie['fname']
 # %% RUN ANALYSIS
-c, dview, n_processes = cm.cluster.setup_cluster(
+c, dview, n_processes = setup_cluster(
     backend='local', n_processes=None, single_thread=False)
 # %% LOAD MEMMAP FILE
 # fname_new='Yr_d1_501_d2_398_d3_1_order_F_frames_369_.mmap'
@@ -627,7 +631,7 @@ else:
     sn_tot = cnm.sn
     print(('Number of components:' + str(A_tot.shape[-1])))
     t_patch = time.time() - t1
-
+    dview.terminate()
     c, dview, n_processes = cm.cluster.setup_cluster(
     backend='local', n_processes=None, single_thread=False)
     # %%
@@ -648,7 +652,7 @@ else:
         # TODO: todocument
         idx_components, idx_components_bad = estimate_components_quality(
             traces, Y, A_tot, C_tot, b_tot, f_tot, final_frate=final_frate, Npeaks=Npeaks, r_values_min=r_values_min,
-            fitness_min=fitness_min, fitness_delta_min=fitness_delta_min)
+            fitness_min=fitness_min, fitness_delta_min=fitness_delta_min, dview = dview)
         print(('Keeping ' + str(len(idx_components)) +
                ' and discarding  ' + str(len(idx_components_bad))))
         # %%
@@ -686,13 +690,13 @@ else:
     traces = C + YrA
     idx_components, idx_components_bad, fitness_raw, fitness_delta, r_values = estimate_components_quality(
         traces, Y, A, C, b, f, final_frate=final_frate, Npeaks=Npeaks, r_values_min=r_values_min, fitness_min=fitness_min,
-        fitness_delta_min=fitness_delta_min, return_all=True)
+        fitness_delta_min=fitness_delta_min, return_all=True, dview = dview, num_traces_per_group = 50)
     t_eva_comps = time.time() - t1
     print(' ***** ')
     print((len(traces)))
     print((len(idx_components)))
     # %% save results
-    np.savez(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_analysis.npz'), Cn=Cn, fname_new = fname_new,
+    np.savez(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_analysis_after_merge.npz'), Cn=Cn, fname_new = fname_new,
              A=A,
              C=C, b=b, f=f, YrA=YrA, sn=sn, d1=d1, d2=d2, idx_components=idx_components,
              idx_components_bad=idx_components_bad,
@@ -718,22 +722,17 @@ params_display = {
     'downsample_ratio': .2,
     'thr_plot': 0.8
 }
-try:
-    fname_new = fname_new[()]
-except:
-    pass
+fn_old = fname_new 
 #analysis_file = '/mnt/ceph/neuro/jeremie_analysis/neurofinder.03.00.test/Yr_d1_498_d2_467_d3_1_order_C_frames_2250_._results_analysis.npz'
-with np.load(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_analysis.npz')) as ld:
+with np.load(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_analysis_after_merge.npz'), encoding = 'latin1') as ld:
     print(ld.keys())
     locals().update(ld) 
     dims_off = d1,d2    
     A = scipy.sparse.coo_matrix(A[()])
     dims = (d1,d2)
     gSig = params_movie['gSig']
-    try:
-        fname_new = fname_new[()]
-    except:
-        pass
+    fname_new = fn_old
+
 #%%
 all_matches = False
 filter_SNR = False
@@ -775,7 +774,7 @@ crd = plot_contours(A_gt_thr, Cn, thr=.99)
         
 #%%
 from caiman.components_evaluation import evaluate_components_CNN
-predictions,final_crops = evaluate_components_CNN(A,dims,gSig,model_name = 'use_cases/CaImAnpaper/cnn_model')
+predictions,final_crops = evaluate_components_CNN(A,dims,gSig)
 #%%
 threshold = .95
 from caiman.utils.visualization import matrixMontage
@@ -832,10 +831,11 @@ print(' ***** ')
 print((len(r_values)))
 print((len(idx_components)))  
 #%%
+pl.figure()
 pl.subplot(1, 2, 1)
-crd = plot_contours(A.tocsc()[:, idx_components], Cn, thr=params_display['thr_plot'], vmax = 0.95)
+crd = plot_contours(A.tocsc()[:, idx_components], Cn, thr=params_display['thr_plot'], vmax = 0.85)
 pl.subplot(1, 2, 2)
-crd = plot_contours(A.tocsc()[:, idx_components_bad], Cn, thr=params_display['thr_plot'], vmax = 0.35)
+crd = plot_contours(A.tocsc()[:, idx_components_bad], Cn, thr=params_display['thr_plot'], vmax = 0.85)
 #%%
 #from sklearn.preprocessing import normalize
 #
@@ -855,7 +855,9 @@ crd = plot_contours(A.tocsc()[:, idx_components_bad], Cn, thr=params_display['th
 #        'size'   : 20}
 #pl.rc('font', **font)
 #from sklearn.preprocessing import normalize
-
+#%%
+np.savez(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_comparison_cnn_after_merge.npz'),tp_gt = tp_gt, tp_comp = tp_comp, fn_gt = fn_gt, fp_comp = fp_comp, performance_cons_off = performance_cons_off,idx_components = idx_components, A_gt = A_gt, C_gt = C_gt
+        , b_gt = b_gt , f_gt = f_gt, dims = dims, YrA_gt = YrA_gt, A = A, C = C, b = b, f = f, YrA = YrA, Cn = Cn)
 
 #%%
 plot_results = True
@@ -877,9 +879,7 @@ font = {'family' : 'Arial',
 
 pl.rc('font', **font)
 print({a:b.astype(np.float16) for a,b in performance_cons_off.items()})
-#%%
-np.savez(os.path.join(os.path.split(fname_new)[0], os.path.split(fname_new)[1][:-4] + 'results_comparison_cnn.npz'),tp_gt = tp_gt, tp_comp = tp_comp, fn_gt = fn_gt, fp_comp = fp_comp, performance_cons_off = performance_cons_off,idx_components = idx_components, A_gt = A_gt, C_gt = C_gt
-        , b_gt = b_gt , f_gt = f_gt, dims = dims, YrA_gt = YrA_gt, A = A, C = C, b = b, f = f, YrA = YrA, Cn = Cn)
+
 #%%
 view_patches_bar(Yr, scipy.sparse.coo_matrix(A_gt.tocsc()[:, fn_gt]), C_gt[fn_gt, :], b_gt, f_gt, dims[0], dims[1],
                  YrA=YrA_gt[fn_gt, :], img=Cn)

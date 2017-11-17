@@ -260,6 +260,50 @@ class MotionCorrect(object):
         
         return self
 
+     
+     def apply_shifts_movie(self, fname, rigid_shifts = True):
+        """
+        Applies shifts found by registering one file to a different file. Useful 
+        for cases when shifts computed from a structural channel are applied to a 
+        functional channel. Currently only application of shifts through openCV is 
+        supported.
+    
+        Parameters:
+        -----------
+        fname: str
+            name of the movie to motion correct. It should not contain nans. All the loadable formats from CaImAn are acceptable
+            
+        rigid_shifts: bool
+            apply rigid or pw-rigid shifts (must exist in the mc object)    
+        
+        Returns:
+        ----------
+        m_reg: caiman movie object
+            caiman movie object with applied shifts (not memory mapped)
+        """
+        
+        Y = cm.load(fname).astype(np.float32)
+        
+        if rigid_shifts is True:
+            if self.shifts_opencv:
+                m_reg = [apply_shift_iteration(img, shift) for img, shift in zip(Y, self.shifts_rig)]
+            else:
+                m_reg = [apply_shifts_dft(img,(
+                            sh[0],sh[1]), 0, is_freq = False, border_nan=True)  for img, sh in zip(
+                            Y, self.shifts_rig) ]
+        else:
+            dims_grid = tuple(np.max(np.stack(self.coord_shifts_els[0],axis=1),axis=1) - np.min(np.stack(self.coord_shifts_els[0],axis=1),axis=1) + 1)
+            shifts_x = np.stack([np.reshape(_sh_,dims_grid,order='C').astype(np.float32) for _sh_ in self.x_shifts_els], axis = 0)
+            shifts_y = np.stack([np.reshape(_sh_,dims_grid,order='C').astype(np.float32) for _sh_ in self.y_shifts_els], axis = 0)
+            dims = Y.shape[1:]
+            x_grid, y_grid = np.meshgrid(np.arange(0., dims[0]).astype(np.float32), np.arange(0., dims[1]).astype(np.float32))
+            m_reg = [cv2.remap(img, 
+                        -np.resize(shiftY, dims)+x_grid, -np.resize(shiftX, dims)+y_grid, cv2.INTER_CUBIC) 
+                        for img, shiftX, shiftY in zip(Y, shifts_x, shifts_y)]
+            
+        return cm.movie(np.stack(m_reg,axis=0))
+
+
 
 #%%
 def apply_shift_iteration(img,shift,border_nan=False, border_type = cv2.BORDER_REFLECT):
@@ -536,7 +580,7 @@ def motion_correct_iteration(img,template,frame_num,max_shift_w=25,
 
     M = np.float32([[1,0,sh_y_n],[0,1,sh_x_n]])
     min_,max_ = np.min(img),np.max(img)
-    new_img = np.clip(cv2.warpAffine(img,M,(w_i,h_i),flags=cv2.INTER_CUBIC),min_,max_)
+    new_img = np.clip(cv2.warpAffine(img,M,(w_i,h_i),flags=cv2.INTER_CUBIC, borderMode = cv2.BORDER_REFLECT),min_,max_)
 
     new_templ=template*frame_num/(frame_num + 1) + 1./(frame_num + 1)*new_img     
     shift=[sh_x_n,sh_y_n]
@@ -577,7 +621,7 @@ def motion_correct_iteration_fast(img,template,max_shift_w=10,max_shift_h=10):
 
     M = np.float32([[1,0,sh_y_n],[0,1,sh_x_n]])
     
-    new_img = cv2.warpAffine(img,M,(w_i,h_i),flags=cv2.INTER_CUBIC)
+    new_img = cv2.warpAffine(img,M,(w_i,h_i),flags=cv2.INTER_CUBIC, borderMode = cv2.BORDER_REFLECT)
 
     shift=[sh_x_n,sh_y_n]
 
@@ -931,14 +975,17 @@ def motion_correct_parallel(file_names,fr=10,template=None,margins_out=0,
 
     try:
         if dview is not None:
-            file_res = dview.map_sync(process_movie_parallel, args_in)                         
-            dview.results.clear()
+            if 'multiprocessing' in str(type(dview)):
+                file_res = dview.map_async(process_movie_parallel, args_in).get(9999999)
+            else:
+                file_res = dview.map_sync(process_movie_parallel, args_in)                         
+                dview.results.clear()
         else:
             file_res = list(map(process_movie_parallel, args_in))        
 
     except:
         try:
-            if dview is not None:
+            if (dview is not None) and not ('multiprocessing' in str(type(dview))):
                 dview.results.clear()       
 
         except UnboundLocalError as uberr:
@@ -1462,8 +1509,17 @@ def create_weight_matrix_for_blending(img, overlaps, strides):
 #%%
 def low_pass_filter_space(img_orig,gSig_filt):
     ksize = tuple([(3 * i) // 2 * 2 + 1 for i in gSig_filt])
-    return cv2.GaussianBlur(img_orig, ksize=ksize, sigmaX=gSig_filt[0],sigmaY=gSig_filt[1], borderType=cv2.BORDER_REFLECT) \
-                            - cv2.boxFilter(img_orig, ddepth=-1,ksize=ksize, borderType=cv2.BORDER_REFLECT)        
+    #return cv2.GaussianBlur(img_orig, ksize=ksize, sigmaX=gSig_filt[0],sigmaY=gSig_filt[1], borderType=cv2.BORDER_REFLECT) \
+    #                        - cv2.boxFilter(img_orig, ddepth=-1,ksize=ksize, borderType=cv2.BORDER_REFLECT, normalize = True)                                   
+    ker = cv2.getGaussianKernel(ksize[0], gSig_filt[0])
+    ker2D = ker.dot(ker.T)    
+    nz = np.nonzero(ker2D>=ker2D[:,0].max())
+    zz = np.nonzero(ker2D<ker2D[:,0].max())
+    ker2D[nz] -= ker2D[nz].mean()
+    ker2D[zz] = 0
+    #ker -= ker.mean()
+    #return cv2.sepFilter2D(np.array(img_orig,dtype=np.float32),-1,kernelX = ker, kernelY = ker, borderType=cv2.BORDER_REFLECT)
+    return cv2.filter2D(np.array(img_orig,dtype=np.float32),-1,ker2D, borderType=cv2.BORDER_REFLECT)
 #%% 
 def tile_and_correct(img,template, strides, overlaps,max_shifts, newoverlaps = None, newstrides = None, upsample_factor_grid=4,
                 upsample_factor_fft=10,show_movie=False,max_deviation_rigid=2,add_to_movie=0, shifts_opencv = False, gSig_filt = None):
@@ -1713,7 +1769,7 @@ def compute_metrics_motion_correction(fname,final_size_x,final_size_y, swap_dim,
     m = m[:,max_shft_x:max_shft_x_1,max_shft_y:max_shft_y_1]
     if np.sum(np.isnan(m))>0:
         print(m.shape)
-        raise Exception('Movie containts nan')
+        raise Exception('Movie contains nan')
         
     print('Local correlations..')
     img_corr = m.local_correlations(eight_neighbours=True, swap_dim = swap_dim)
@@ -1780,7 +1836,7 @@ def compute_metrics_motion_correction(fname,final_size_x,final_size_y, swap_dim,
 #%%
 def motion_correct_batch_rigid(fname, max_shifts, dview = None, splits = 56 ,num_splits_to_process = None, num_iter = 1,
                                 template = None, shifts_opencv = False, save_movie_rigid = False, add_to_movie = None,
-                               nonneg_movie = False, gSig_filt = None):
+                               nonneg_movie = False, gSig_filt = None, subidx=slice(None, None, 1)):
     """
     Function that perform memory efficient hyper parallelized rigid motion corrections while also saving a memory mappable file
 
@@ -1812,7 +1868,10 @@ def motion_correct_batch_rigid(fname, max_shifts, dview = None, splits = 56 ,num
 
     save_movie_rigid: boolean
          toggle save movie
-    
+
+    subidx: slice
+        Indices to slice
+
     Returns:
     --------    
     fname_tot_rig: str
@@ -1823,21 +1882,24 @@ def motion_correct_batch_rigid(fname, max_shifts, dview = None, splits = 56 ,num
         list of produced templates, one per batch
     
     shifts: list
-        inferred rigid shifts to corrrect the movie
+        inferred rigid shifts to correct the movie
 
     Raise:
     -----
         Exception('The movie contains nans. Nans are not allowed!')
     
     """
-    m = cm.load(fname,subindices=slice(0,None,10))
+    corrected_slicer = slice(subidx.start, subidx.stop, subidx.step*10)
+    m = cm.load(fname,subindices=corrected_slicer)
     
     if m.shape[0]<300:
-        m = cm.load(fname,subindices=slice(0,None,1))
+        m = cm.load(fname,subindices=corrected_slicer)
     elif m.shape[0]<500:
-        m = cm.load(fname,subindices=slice(0,None,5))
+        corrected_slicer = slice(subidx.start, subidx.stop, subidx.step*5)
+        m = cm.load(fname,subindices=corrected_slicer)
     else:
-        m = cm.load(fname,subindices=slice(0,None,30))
+        corrected_slicer = slice(subidx.start, subidx.stop, subidx.step*30)
+        m = cm.load(fname,subindices=corrected_slicer)
     
     if template is None:   
         if gSig_filt is not None:
@@ -2016,14 +2078,18 @@ def tile_and_correct_wrapper(params):
         1 #'Open CV is naturally single threaded'
 
     img_name,  out_fname,idxs, shape_mov, template, strides, overlaps, max_shifts,\
-        add_to_movie,max_deviation_rigid,upsample_factor_grid, newoverlaps, newstrides,shifts_opencv,nonneg_movie, gSig_filt  = params
+        add_to_movie,max_deviation_rigid,upsample_factor_grid, newoverlaps, newstrides, \
+        shifts_opencv,nonneg_movie, gSig_filt, is_fiji = params
 
     import os
 
     name, extension = os.path.splitext(img_name)[:2]
     
     if extension == '.tif' or extension == '.tiff':  # check if tiff file
-        imgs = imread(img_name,key = idxs)
+        if is_fiji:
+            imgs = imread(img_name)[idxs]
+        else:
+            imgs = imread(img_name, key=idxs)
         mc = np.zeros(imgs.shape,dtype = np.float32)
         shift_info = []
     elif extension == '.sbx':  # check if sbx file
@@ -2073,10 +2139,12 @@ def motion_correction_piecewise(fname, splits, strides, overlaps, add_to_movie=0
     import os
     import h5py
     name, extension = os.path.splitext(fname)[:2]
+    is_fiji = False
 
     if extension == '.tif' or extension == '.tiff':  # check if tiff file
         with tifffile.TiffFile(fname) as tf:
-           if len(tf) == 1:
+           if len(tf) == 1:  # Fiji-generated TIF
+               is_fiji = True
                T,d1,d2 = tf[0].shape
            else:    
                d1,d2 = tf[0].shape
@@ -2135,11 +2203,14 @@ def motion_correction_piecewise(fname, splits, strides, overlaps, add_to_movie=0
     for idx in idxs:
       pars.append([fname,fname_tot,idx,shape_mov, template, strides, overlaps, max_shifts, np.array(
           add_to_movie,dtype = np.float32),max_deviation_rigid,upsample_factor_grid,
-                   newoverlaps, newstrides, shifts_opencv,nonneg_movie, gSig_filt])
+                   newoverlaps, newstrides, shifts_opencv,nonneg_movie, gSig_filt, is_fiji])
     
     if dview is not None:
         print('** Startting parallel motion correction **')
-        res =dview.map_sync(tile_and_correct_wrapper,pars)
+        if 'multiprocessing' in str(type(dview)):
+            res = dview.map_async(tile_and_correct_wrapper,pars).get(9999999)
+        else:
+            res = dview.map_sync(tile_and_correct_wrapper,pars)
         print('** Finished parallel motion correction **')
     else:
         res = list(map(tile_and_correct_wrapper,pars))

@@ -183,7 +183,11 @@ class timeseries(np.ndarray):
 
 
         elif extension == '.avi':
-            codec=cv2.cv.FOURCC('I','Y','U','V')
+            codec = None
+            try:
+                codec=cv2.FOURCC('I','Y','U','V')
+            except AttributeError:
+                codec = cv2.VideoWriter_fourcc(*'IYUV')
             np.clip(self,np.percentile(self,1),np.percentile(self,99),self)
             minn,maxx = np.min(self),np.max(self)
             data = 255 * (self-minn)/(maxx-minn)
@@ -213,7 +217,10 @@ class timeseries(np.ndarray):
                     dset.attrs["file_name"]=[a.encode('utf8') for a in self.file_name]
                 except:
                     print('No file name saved')
-                dset.attrs["meta_data"]=cpk.dumps(self.meta_data)
+                if self.meta_data[0] is not None:      
+                    print(self.meta_data)
+                    dset.attrs["meta_data"]=cpk.dumps(self.meta_data)
+                    
 
         elif extension == '.mmap':
             base_name=name
