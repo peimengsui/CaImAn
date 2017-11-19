@@ -4,21 +4,29 @@ import vgg
 import numpy as np
 from data_loader import *
 import pandas as pd
-from neuron_dataset import NeuronDataset
+from neuron_dataset import NeuronDataset, TestDataset
 from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as transforms
 
-model_dict = torch.load('save_temp/checkpoint_19.tar')['state_dict']
+
+model_dict = torch.load('save_temp/checkpoint_64.tar')['state_dict']
 regressor = vgg.__dict__['vgg11_bn']()
 regressor.load_state_dict(model_dict)
 regressor = regressor.cpu()
 
-test_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
-                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
-                                           transform=transforms.Compose([
-                                               transforms.ToTensor()
-                                           ]))
-test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+#test_dataset = NeuronDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_images/all_labels_test.pkl',
+#                                           image_dir='/mnt/ceph/neuro/edge_cutter/test_images',
+#                                           transform=transforms.Compose([
+#                                               transforms.ToTensor()
+#                                           ]))
+#test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
 
+test_dataset = TestDataset(label_file='/mnt/ceph/neuro/edge_cutter/test_crops/valid_label_dic.pkl',
+                                                                                   image_dir='/mnt/ceph/neuro/edge_cutter/test_crops/',
+                                                                                   transform=transforms.Compose([
+                                                                                           transforms.ToTensor()
+                                                                                   ]))
+test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False, num_workers=4)
 def predict(test_loader, model):
     """
     Run evaluation
@@ -31,7 +39,7 @@ def predict(test_loader, model):
 
     n_val = 0
     #for i, (input, target) in enumerate(val_loader):
-    for i, (input, target) in test_loader:
+    for i, (input, target) in enumerate(test_loader):
         data_list.append(input.numpy().reshape((128, 64, 64)))
         ground_truth += [int(x) for x in target.numpy().flatten()]
         input_var = torch.autograd.Variable(input, volatile=True)

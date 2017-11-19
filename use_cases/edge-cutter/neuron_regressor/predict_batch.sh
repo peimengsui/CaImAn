@@ -3,7 +3,7 @@
 #SBATCH --job-name=myPythonJobGPU
 #SBATCH --nodes=1
 #SBATCH --time=00:30:00
-#SBATCH --mem=5GB
+#SBATCH --mem=10GB
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=END
 #SBATCH --mail-user=ps3336@nyu.edu

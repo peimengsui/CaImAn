@@ -16,16 +16,16 @@ import pickle
 import argparse
 
 parser = argparse.ArgumentParser(description='Movie Generation Script')
-parser.add_argument('--file-index', type=int, default=0, metavar='N',
+parser.add_argument('--file-index', type=int, default=2, metavar='N',
                     help='index of raw input data')
 parser.add_argument('--seed', type=int, default=1111, metavar='N',
                     help='random seed to exclude neuron')
-parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/50_input_data',
+parser.add_argument('--save-dir', type=str, default='/mnt/ceph/neuro/edge_cutter/1_input_data',
                     help='directory to save output file')
 
 parser.add_argument('--random-choice', type=int, default= 0.6,
                     help='how much percentage neuron take out from train data')
-parser.add_argument('--exceptionality-thred', type=int, default=-50,
+parser.add_argument('--exceptionality-thred', type=int, default=-30,
                     help='threshold for counting activated neuron')
 
 
@@ -136,7 +136,7 @@ max_mov = m_res.max()
 #%%
 #m_res.play()
 #%%
-count_start = 10
+count_start = 1
 #bin_ = 10
 
 
@@ -145,6 +145,8 @@ cms_list = []
 for count in range(count_start,T):
     img_temp = (m_res[count-count_start:count].copy().mean(0)/max_mov).astype(np.float32)
 #    img_temp = m_res[count].copy().astype(np.float32)/max_mov
+    import pdb
+    pdb.set_trace()
     active = np.where(exceptionality[:,count]< args.exceptionality_thred)[0]
     print(active)
     # cms: a list of positions of bounding box
@@ -208,7 +210,7 @@ max_mov = m_res.max()
 #%%
 #m_res.play()
 #%%
-count_start = 10
+count_start = 1
 #bin_ = 10
 img_frame_list = []
 cms_list = []

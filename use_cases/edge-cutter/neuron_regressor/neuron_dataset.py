@@ -385,6 +385,7 @@ class TestDataset(Dataset):
 		"""
 		self.label = pickle.load(open(label_file, "rb"))
 		self.image_dir = image_dir
+		self.transform = transform
 
 	def __len__(self):
 		return len(self.label)
@@ -393,7 +394,7 @@ class TestDataset(Dataset):
 		fileindex = idx + 1
 		img_name = os.path.join(self.image_dir, '{}.png'.format(fileindex))
 		image = Image.open(img_name)
-		count = label[str(fileindex)]
+		count = self.label[str(fileindex)]
 		if self.transform:
 			image = self.transform(image)
 
